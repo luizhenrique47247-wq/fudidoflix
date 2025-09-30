@@ -383,7 +383,7 @@
                 <section class="mb-10 carousel-section opacity-0" data-original-item-count="${items.length}">
                     <h2 class="text-xl sm:text-2xl font-bold mb-4">${title}</h2>
                     <div class="carousel-container relative group">
-                        <div id="${carouselId}" class="carousel flex items-start space-x-3 md:space-x-4 overflow-x-auto py-6" style="scroll-behavior: auto;">
+                        <div id="${carouselId}" class="carousel flex items-start space-x-3 md:space-x-4 overflow-x-auto py-6 -my-6" style="scroll-behavior: auto;">
                             ${cards}
                         </div>
                         <button class="carousel-arrow left hidden group-hover:md:flex" data-direction="-1" data-carousel="${carouselId}"><i class="fas fa-chevron-left"></i></button>
@@ -450,7 +450,7 @@
                 { id: 'globoplay', title: 'Originais e Exclusivos Globoplay', fetcher: async () => {
                     const [movies, tv] = await Promise.all([
                         fetchTMDB('/discover/movie?watch_region=BR&with_watch_providers=307&with_networks=2554&sort_by=popularity.desc'),
-                        fetchTMDB('/discover/tv?watch_region=BR&with_watch_providers=307&with_networks=2554&sort_by=popularity.desc')
+                        fetchTMDB('/discover/tv?watch_region=BR&with_watch_providers=307&sort_by=popularity.desc')
                     ]);
                     return combineAndSort(movies, tv);
                 }},
@@ -552,28 +552,47 @@
                 else if (type === 'tv') title = 'Séries';
                 else if (type === 'animes') title = 'Animes';
 
-                const baseFilters = [
+                const movieBaseFilters = [
                     { value: 'all', name: 'Gêneros' }, { value: 'g-28', name: 'Ação' },
                     { value: 'c-BR', name: 'Brasileiros' }, { value: 'rd-1980-12-31', name: 'Clássicos' },
                     { value: 'k-9716', name: 'Stand-up' }, { value: 'g-35', name: 'Comédias' },
-                    { value: 'rt-40', name: 'Curtas' }, { value: 'g-99', name: 'Documentários' },
-                    { value: 'g-18', name: 'Drama' }, { value: 'k-210024', name: 'Esportes' },
+                    { value: 'g-99', name: 'Documentários' }, { value: 'g-18', name: 'Drama' }, 
                     { value: 'g-14', name: 'Fantasia' }, { value: 'g-878', name: 'Ficção Científica' },
-                    { value: 'k-533', name: 'Independentes' }, { value: 'g-10402', name: 'Música e Musicais' },
-                    { value: 'g-80', name: 'Policial' }, { value: 'g-10749', name: 'Romance' },
-                    { value: 'g-53', name: 'Suspense' }, { value: 'g-27', name: 'Terror' }
+                    { value: 'g-10402', name: 'Música e Musicais' }, { value: 'g-80', name: 'Policial' }, 
+                    { value: 'g-10749', name: 'Romance' }, { value: 'g-53', name: 'Suspense' }, 
+                    { value: 'g-27', name: 'Terror' }
                 ];
+                
+                const tvBaseFilters = [
+                    { value: 'all', name: 'Gêneros' }, 
+                    { value: 'g-10759', name: 'Ação e Aventura' },
+                    { value: 'g-16', name: 'Animação' }, 
+                    { value: 'c-BR', name: 'Brasileiras' },
+                    { value: 'fd-1990-12-31', name: 'Clássicos (até 1990)' }, 
+                    { value: 'g-35', name: 'Comédia' },
+                    { value: 'g-80', name: 'Crime' }, 
+                    { value: 'g-99', name: 'Documentário' },
+                    { value: 'g-18', name: 'Drama' }, 
+                    { value: 'g-10765', name: 'Ficção Científica e Fantasia' }, 
+                    { value: 'g-9648', name: 'Mistério' }, 
+                    { value: 'g-10764', name: 'Reality Show' },
+                    { value: 'k-9716', name: 'Stand-up' },
+                    { value: 'g-10767', name: 'Talk Show' }
+                ];
+
                 const movieSpecificFilters = [ { value: 'p-2|3', name: 'Disney e Pixar' }, { value: 'k-oscar-list', name: 'Premiados (Oscar)' } ];
                 const tvSpecificFilters = [ { value: 'k-emmy-list', name: 'Premiados (Emmy)' } ];
+                
                 const streamingFilters = [
                     { value: 'separator', name: '──────────' }, { value: 's-8,213', name: 'Netflix' },
                     { value: 's-119,1024', name: 'Prime Video' }, { value: 's-1899', name: 'Max' },
-                    { value: 's-531,4330', name: 'Paramount+' }, { value: 's-307,2554', name: 'Globo Play' },
+                    { value: 's-531,4330', name: 'Paramount+' }, { value: 's-307', name: 'Globo Play' },
                     { value: 's-337,2739', name: 'Disney+' }, { value: 's-350,2552', name: 'Apple TV+' },
                 ];
+                
                 let finalFilters = [];
-                if (type === 'movie') finalFilters = [...baseFilters, ...movieSpecificFilters, ...streamingFilters];
-                else if (type === 'tv') finalFilters = [...baseFilters, ...tvSpecificFilters, ...streamingFilters];
+                if (type === 'movie') finalFilters = [...movieBaseFilters, ...movieSpecificFilters, ...streamingFilters];
+                else if (type === 'tv') finalFilters = [...tvBaseFilters, ...tvSpecificFilters, ...streamingFilters];
 
                 const dateSortValue = (type === 'movie') ? 'primary_release_date.desc' : 'first_air_date.desc';
                 
@@ -621,10 +640,7 @@
                     titleList = ["Duna: Parte Dois", "Ainda Estou Aqui", "Anora", "The Brutalist", "Conclave", "Emilia Pérez", "Gladiador 2", "Nickel Boys", "Sing Sing", "Wicked", "Oppenheimer", "Ficção Americana", "Anatomia de uma Queda", "Barbie", "Os Rejeitados", "Assassinos da Lua das Flores", "Maestro", "Vidas Pastadas", "Pobres Criaturas", "Zona de Interesse", "Tudo em Todo o Lugar ao Mesmo Tempo", "Nada de Novo no Front", "Avatar: O Caminho da Água", "Os Banshees de Inisherin", "Elvis", "Os Fabelmans", "TÁR", "Top Gun: Maverick", "Triângulo da Tristeza", "Entre Mulheres", "No Ritmo do Coração", "Belfast", "Não Olhe Para Cima", "Drive My Car", "Duna", "King Richard: Criando Campeãs", "Licorice Pizza", "O Beco do Pesadelo", "Ataque dos Cães", "Amor, Sublime Amor", "Nomadland", "Meu Pai", "Judas e o Messias Negro", "Mank", "Minari: Em Busca da Felicidade", "Bela Vingança", "O Som do Silêncio", "Os 7 de Chicago", "Parasita", "1917", "Ford vs Ferrari", "O Irlandês", "Jojo Rabbit", "Coringa", "Adoráveis Mulheres", "História de Um Casamento", "Era Uma Vez Em... Hollywood", "Green Book: O Guia", "Pantera Negra", "Infiltrado na Klan", "Bohemian Rhapsody", "A Favorita", "Roma", "Nasce uma Estrela", "Vice", "A Forma da Água", "Me Chame Pelo Seu Nome", "O Destino de uma Nação", "Dunkirk", "Corra!", "Lady Bird: A Hora de Voar", "Trama Fantasma", "The Post: A Guerra Secreta", "Três Anúncios Para um Crime", "Moonlight: Sob a Luz do Luar", "A Chegada", "Um Limite Entre Nós", "Até o Último Homem", "A Qualquer Custo", "Estrelas Além do Tempo", "La La Land: Cantando Estações", "Lion: Uma Jornada Para Casa", "Manchester à Beira-Mar", "Spotlight: Segredos Revelados", "A Grande Aposta", "Ponte dos Espiões", "Brooklyn", "Mad Max: Estrada da Fúria", "Perdido em Marte", "O Regresso", "O Quarto de Jack", "Birdman ou (A Inesperada Virtude da Ignorância)", "Boyhood: Da Infância à Juventude", "O Grande Hotel Budapeste", "O Jogo da Imitação", "A Teoria de Tudo", "Selma: Uma Luta Pela Igualdade", "Sniper Americano", "Whiplash: Em Busca da Perfeição", "12 Anos de Escravidão", "Trapaça", "Gravidade", "O Lobo de Wall Street", "Clube de Compras Dallas", "Ela", "Capitão Phillips", "Nebraska", "Philomena", "Argo", "Amor", "Indomável Sonhadora", "Django Livre", "Os Miseráveis", "As Aventuras de Pi", "Lincoln", "O Lado Bom da Vida", "A Hora Mais Escura", "O Artista", "Cavalo de Guerra", "O Homem que Mudou o Jogo", "Tão Forte e Tão Perto", "Histórias Cruzadas", "A Invenção de Hugo Cabret", "Meia-Noite em Paris", "Os Descendentes", "A Árvore da Vida", "O Discurso do Rei", "127 Horas", "Cisne Negro", "A Origem", "O Vencedor", "Minhas Mães e Meu Pai", "A Rede Social", "Toy Story 3", "Bravura Indômita", "Inverno da Alma", "Guerra ao Terror", "Avatar", "Um Sonho Possível", "Distrito 9", "Educação", "Bastardos Inglórios", "Um Homem Sério", "Preciosa: Uma História de Esperança", "Up: Altas Aventuras", "Amor Sem Escalas", "Quem Quer Ser Um Milionário?", "O Leitor", "Frost/Nixon", "O Curioso Caso de Benjamin Button", "Milk - A Voz da Igualdade", "Onde os Fracos Não Têm Vez", "Desejo e Reparação", "Juno", "Conduta de Risco", "Sangue Negro", "Os Infiltrados", "Babel", "Cartas de Iwo Jima", "Pequena Miss Sunshine", "A Rainha", "Crash - No Limite", "O Segredo de Brokeback Mountain", "Capote", "Boa Noite, e Boa Sorte", "Munique", "Menina de Ouro", "O Aviador", "Em Busca da Terra do Nunca", "Ray", "Sideways - Entre Umas e Outras", "O Senhor dos Anéis: O Retorno do Rei", "Encontros e Desencontros", "Mestre dos Mares - O Lado Mais Distante do Mundo", "Sobre Meninos e Lobos", "Seabiscuit - Alma de Herói", "Chicago", "Gangues de Nova York", "As Horas", "O Senhor dos Anéis: As Duas Torres", "O Pianista", "Uma Mente Brilhante", "Assassinato em Gosford Park", "Entre Quatro Paredes", "O Senhor dos Anéis: A Sociedade do Anel", "Moulin Rouge - Amor em Vermelho", "Gladiador", "Chocolate", "O Tigre e o Dragão", "Erin Brockovich - Uma Mulher de Talento", "Traffic", "Beleza Americana", "Regras da Vida", "À Espera de um Milagre", "O Informante", "O Sexto Sentido"];
                     searchFunction = searchMoviesByTitles;
                 } else if (currentGenre === 'k-emmy-list') {
-                    titleList = [
-                        "Succession", "The Crown", "Game of Thrones", "The Handmaid's Tale", "Breaking Bad", "Homeland", "Mad Men", "24", "The Sopranos", "The West Wing", "Law & Order", "NYPD Blue",
-                        "The Bear", "Ted Lasso", "Schitt's Creek", "Fleabag", "The Marvelous Mrs. Maisel", "Veep", "Modern Family", "30 Rock", "The Office", "Everybody Loves Raymond", "Arrested Development", "Friends", "Sex and the City", "Ally McBeal", "Frasier", "Seinfeld", "The Larry Sanders Show", "Murphy Brown", "Cheers", "The Golden Girls", "The Cosby Show", "Barney Miller", "Taxi", "All in the Family", "The Mary Tyler Moore Show", "M*A*S*H", "Get Smart", "Hill Street Blues"
-                    ];
+                    titleList = [ "Succession", "The Crown", "Game of Thrones", "The Handmaid's Tale", "Breaking Bad", "Homeland", "Mad Men", "24", "The Sopranos", "The West Wing", "Law & Order", "NYPD Blue", "ER", "The X-Files", "The Practice", "The Bear", "Ted Lasso", "Schitt's Creek", "Fleabag", "The Marvelous Mrs. Maisel", "Veep", "Modern Family", "30 Rock", "The Office", "Everybody Loves Raymond", "Arrested Development", "Friends", "Sex and the City", "Ally McBeal", "Frasier", "Seinfeld", "The Larry Sanders Show", "Murphy Brown", "Cheers", "The Golden Girls", "The Cosby Show", "Barney Miller", "Taxi", "All in the Family", "The Mary Tyler Moore Show", "M*A*S*H", "Get Smart", "Hill Street Blues", "The Queen's Gambit", "Watchmen", "Chernobyl", "When They See Us", "The People v. O. J. Simpson: American Crime Story", "Big Little Lies", "Ozark", "Better Call Saul", "This Is Us", "Stranger Things", "Westworld", "The Mandalorian", "The White Lotus", "Hacks", "Only Murders in the Building", "Abbott Elementary" ];
                     titleList = [...new Set(titleList)]; // Remove duplicates
                     searchFunction = searchSeriesByTitles;
                 }
@@ -644,25 +660,33 @@
                 const endpointType = type === 'animes' ? 'tv' : type;
                 let endpoint = `/discover/${endpointType}?page=${page}&sort_by=${currentSortBy}`;
                 const today = getTodayDate();
-                if (endpointType === 'movie') endpoint += `&primary_release_date.lte=${today}`;
-                else if (endpointType === 'tv') endpoint += `&first_air_date.lte=${today}`;
+                
+                if (endpointType === 'tv') endpoint += `&first_air_date.lte=${today}`;
+                else if (endpointType === 'movie') endpoint += `&primary_release_date.lte=${today}`;
 
                 if (type === 'animes') {
                     endpoint += `&with_genres=16&with_original_language=ja&without_keywords=291485&vote_count.gte=25`;
                 } else {
                     let voteCountParam = '&vote_count.gte=50';
                     if (currentGenre !== 'all') {
-                        const prefix = currentGenre.substring(0, 1);
-                        const value = currentGenre.substring(2);
+                        const parts = currentGenre.split('-');
+                        const prefix = parts[0];
+                        const value = parts.slice(1).join('-');
+
                         switch (prefix) {
                             case 'g': endpoint += `&with_genres=${value}`; break;
                             case 'c': endpoint += `&with_origin_country=${value}`; break;
-                            case 'k': endpoint += `&with_keywords=${value}`; break;
-                            case 'p': endpoint += `&with_companies=${value}`; break;
-                            case 'r':
-                                if (currentGenre.startsWith('rd-')) endpoint += `&primary_release_date.lte=${value}`;
-                                if (currentGenre.startsWith('rt-')) endpoint += `&with_runtime.lte=${value}`;
+                            case 'k': 
+                                endpoint += `&with_keywords=${value}`; 
+                                if (value === '9716') { // stand-up
+                                    endpoint += '&without_genres=16'; // Exclui animes
+                                    voteCountParam = '&vote_count.gte=10';
+                                }
                                 break;
+                            case 'p': endpoint += `&with_companies=${value}`; break;
+                            case 'rd': endpoint += `&primary_release_date.lte=${value}`; break;
+                            case 'fd': endpoint += `&first_air_date.lte=${value}`; break;
+                            case 'rt': endpoint += `&with_runtime.lte=${value}`; break;
                             case 's':
                                 const [provider, network] = value.split(',');
                                 endpoint += `&watch_region=BR&with_watch_providers=${provider}`;
@@ -736,8 +760,6 @@
         const navigateTo = (page) => {
             navigationId++;
             
-            // Se a navegação for para qualquer página que não seja a de pesquisa,
-            // limpa e fecha a barra de pesquisa.
             if (page !== 'search') {
                 searchBar.value = '';
                 searchContainer.classList.remove('active');
@@ -835,6 +857,24 @@
             const cast = credits.cast.slice(0, 4).map(c => c.name).join(', ');
             const keywords = (keywordsData.keywords || keywordsData.results || []).slice(0, 3).map(k => k.name).join(', ');
 
+            // --- INÍCIO DAS MODIFICAÇÕES ---
+
+            // 1. Lógica para calcular e formatar a duração (runtime)
+            let runtimeText = '';
+            if (mediaType === 'movie' && details.runtime) {
+                const hours = Math.floor(details.runtime / 60);
+                const minutes = details.runtime % 60;
+                if (hours > 0) {
+                    runtimeText = `${hours}h ${minutes}min`;
+                } else {
+                    runtimeText = `${minutes}min`;
+                }
+            } else if (mediaType === 'tv' && details.episode_run_time && details.episode_run_time.length > 0) {
+                runtimeText = `${details.episode_run_time[0]}min / ep.`;
+            }
+            
+            // --- FIM DAS MODIFICAÇÕES ---
+
             let rating = '';
             if (mediaType === 'movie' && ratingsData.results) {
                 const brRating = ratingsData.results.find(r => r.iso_3166_1 === 'BR');
@@ -885,10 +925,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div class="md:col-span-2">
                              <div class="flex items-center space-x-4 text-gray-300">
-                                 <p class="flex items-center font-bold text-lg"><svg class="w-6 h-6 mr-1 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>${details.vote_average.toFixed(1)}</p>
-                                 <p>${year}</p>
-                                 ${mediaType === 'tv' ? `<p>${details.number_of_seasons} Temporada${details.number_of_seasons > 1 ? 's' : ''}</p>`: ''}
-                                 <span class="border px-1 text-xs">${rating}</span>
+                                <p class="flex items-center font-bold text-lg">
+                                    <svg class="w-5 h-5 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                                    ${details.vote_average.toFixed(1)}
+                                </p>
+                                <p>${year}</p>
+                                <!-- MODIFICADO: Adicionado a duração -->
+                                ${runtimeText ? `<p>${runtimeText}</p>` : ''}
+                                ${mediaType === 'tv' ? `<p>${details.number_of_seasons} Temporada${details.number_of_seasons > 1 ? 's' : ''}</p>`: ''}
+                                <span class="border px-1 text-xs">${rating}</span>
                              </div>
                              <p class="mt-4 text-base">${overview}</p>
                         </div>
@@ -968,14 +1013,11 @@
                     if (arrow.dataset.direction === "1") { // Seta Direita
                         let newScrollLeft = carousel.scrollLeft + scrollAmount;
                         smoothScrollTo(carousel, newScrollLeft, duration, () => {
-                            // Após rolar, verifica se passou do final da lista original
                             if (carousel.scrollLeft >= totalOriginalWidth) {
-                                // Se sim, volta para o início sem animação para criar o loop
                                 carousel.scrollLeft -= totalOriginalWidth;
                             }
                         });
                     } else { // Seta Esquerda
-                        // Se estiver no início e clicar para a esquerda, precisa ir para o final
                         if (carousel.scrollLeft < scrollAmount) {
                             carousel.scrollLeft += totalOriginalWidth;
                         }
@@ -1102,4 +1144,5 @@
     </script>
 </body>
 </html>
+
 

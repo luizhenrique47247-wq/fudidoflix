@@ -201,6 +201,7 @@
                     <a href="#" class="nav-link text-base sm:text-lg font-semibold hover:text-gray-300" data-page="tv">Séries</a>
                     <a href="#" class="nav-link text-base sm:text-lg font-semibold hover:text-gray-300" data-page="movie">Filmes</a>
                     <a href="#" class="nav-link text-base sm:text-lg font-semibold hover:text-gray-300" data-page="animes">Animes</a>
+                    <a href="#" class="nav-link text-base sm:text-lg font-semibold hover:text-gray-300" data-page="my-list">Minha Lista</a>
                 </nav>
             </div>
             <div id="search-container" class="relative flex items-center justify-end">
@@ -236,6 +237,9 @@
         const IMG_BASE_URL = 'https://image.tmdb.org/t/p/original';
         const NO_POSTER_URL = 'https://placehold.co/500x750/202020/ffffff?text=Poster+Indisponível';
 
+        const plusIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path></svg>`;
+        const checkIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+
         let currentMediaData = null;
         let currentPage = 'discover';
         let gridPageNumber = 1;
@@ -267,8 +271,7 @@
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`Erro de HTTP! status: ${response.status}`);
                 return await response.json();
-            } catch (error)
-{
+            } catch (error) {
                 console.error(`Falha ao buscar API: ${url}`, error);
                 return null;
             }
@@ -344,6 +347,46 @@
             const updatedHistory = history.slice(0, 10);
             localStorage.setItem('fudidoFlixHistory', JSON.stringify(updatedHistory));
             updateWatchedHistoryCarousel();
+        };
+
+        // --- FUNÇÕES DA MINHA LISTA (localStorage) ---
+        const getMyList = () => {
+            try {
+                const list = localStorage.getItem('fudidoFlixMyList');
+                return list ? JSON.parse(list) : [];
+            } catch (e) { return []; }
+        };
+
+        const saveMyList = (list) => {
+            localStorage.setItem('fudidoFlixMyList', JSON.stringify(list));
+        };
+        
+        const isItemInMyList = (mediaId) => {
+            const list = getMyList();
+            // CORREÇÃO: O ID do dataset vem como string, e o ID salvo é um número.
+            // Convertendo para número para garantir que a comparação (===) funcione.
+            return list.some(item => item.id === Number(mediaId));
+        };
+
+        const toggleMyList = (mediaItem) => {
+            let list = getMyList();
+            const mediaId = mediaItem.id;
+            const itemIndex = list.findIndex(item => item.id === mediaId);
+
+            if (itemIndex > -1) { // Item existe, então remove
+                list.splice(itemIndex, 1);
+            } else { // Item não existe, então adiciona
+                const itemToAdd = {
+                    id: mediaItem.id,
+                    poster_path: mediaItem.poster_path,
+                    title: mediaItem.title,
+                    name: mediaItem.name,
+                    media_type: mediaItem.title ? 'movie' : 'tv'
+                };
+                list.unshift(itemToAdd); // Adiciona no início
+            }
+            saveMyList(list);
+            return itemIndex === -1; // Retorna true se foi adicionado, false se foi removido
         };
         
         // --- FUNÇÕES DE RENDERIZAÇÃO ---
@@ -736,6 +779,37 @@
             
             isFetching = false;
         };
+
+        const renderMyListPage = () => {
+            const callNavigationId = navigationId;
+            showLoading(contentArea);
+            
+            const myListItems = getMyList();
+            
+            if (callNavigationId !== navigationId) return;
+
+            if (myListItems.length === 0) {
+                contentArea.innerHTML = `
+                    <div class="grid-page-container opacity-0 text-center py-20">
+                        <h2 class="text-3xl font-bold mb-4">Minha Lista</h2>
+                        <p class="text-xl text-gray-400">A sua lista está vazia.</p>
+                        <p class="mt-2 text-gray-500">Adicione filmes e séries para vê-los aqui.</p>
+                    </div>`;
+                return;
+            }
+
+            const cardsHtml = myListItems.map(item => createMediaCard(item, true)).join('');
+
+            contentArea.innerHTML = `
+                <div class="grid-page-container opacity-0">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl sm:text-3xl font-bold">Minha Lista</h2>
+                    </div>
+                    <div id="media-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+                        ${cardsHtml}
+                    </div>
+                </div>`;
+        };
         
         const renderSearchResults = async (query) => {
             const callNavigationId = navigationId;
@@ -784,8 +858,12 @@
             const activeLink = document.querySelector(`.nav-link[data-page="${page}"]`);
             if (activeLink) activeLink.classList.add('active');
 
-            if (page === 'discover' || page === 'search') {
-                if(page === 'discover') renderDiscoverPage();
+            if (page === 'discover') {
+                renderDiscoverPage();
+            } else if (page === 'my-list') {
+                renderMyListPage();
+            } else if (page === 'search') {
+                contentArea.innerHTML = `<p class="text-center text-gray-400 py-10 text-xl">Comece a digitar para pesquisar.</p>`;
             } else {
                 currentGridType = page;
                 renderGridPage(page);
@@ -857,9 +935,6 @@
             const cast = credits.cast.slice(0, 4).map(c => c.name).join(', ');
             const keywords = (keywordsData.keywords || keywordsData.results || []).slice(0, 3).map(k => k.name).join(', ');
 
-            // --- INÍCIO DAS MODIFICAÇÕES ---
-
-            // 1. Lógica para calcular e formatar a duração (runtime)
             let runtimeText = '';
             if (mediaType === 'movie' && details.runtime) {
                 const hours = Math.floor(details.runtime / 60);
@@ -873,8 +948,6 @@
                 runtimeText = `${details.episode_run_time[0]}min / ep.`;
             }
             
-            // --- FIM DAS MODIFICAÇÕES ---
-
             let rating = '';
             if (mediaType === 'movie' && ratingsData.results) {
                 const brRating = ratingsData.results.find(r => r.iso_3166_1 === 'BR');
@@ -895,6 +968,15 @@
                 `;
             }
 
+            const isInList = isItemInMyList(mediaId);
+            const listButtonContent = isInList ? checkIcon : plusIcon;
+            const listButtonTitle = isInList ? 'Remover da Minha Lista' : 'Adicionar à Minha Lista';
+
+            const listButtonHtml = `
+                <button id="add-to-list-btn" title="${listButtonTitle}" class="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-400 bg-black bg-opacity-50 text-gray-300 hover:border-white hover:text-white transition">
+                    ${listButtonContent}
+                </button>`;
+
             let recommendationsHtml = '';
             if(recommendationsData && recommendationsData.results && recommendationsData.results.length > 0) {
                  recommendationsHtml = `
@@ -912,11 +994,12 @@
                     <div class="modal-gradient absolute inset-0"></div>
                     <div class="absolute bottom-0 left-0 p-4 sm:p-8 z-10 w-full md:w-3/5">
                         <h2 class="text-3xl sm:text-5xl font-bold">${title}</h2>
-                        <div class="flex items-center space-x-3 mt-4">
+                        <div class="flex items-center flex-wrap gap-3 mt-4">
                             <button class="play-movie-btn flex items-center justify-center gap-2 px-6 py-2 rounded font-semibold bg-white text-black text-lg hover:bg-gray-200">
                                 <i class="fas fa-play"></i> Assistir
                             </button>
                             ${trailerButtonHtml}
+                            ${listButtonHtml}
                         </div>
                     </div>
                 </div>
@@ -930,7 +1013,6 @@
                                     ${details.vote_average.toFixed(1)}
                                 </p>
                                 <p>${year}</p>
-                                <!-- MODIFICADO: Adicionado a duração -->
                                 ${runtimeText ? `<p>${runtimeText}</p>` : ''}
                                 ${mediaType === 'tv' ? `<p>${details.number_of_seasons} Temporada${details.number_of_seasons > 1 ? 's' : ''}</p>`: ''}
                                 <span class="border px-1 text-xs">${rating}</span>
@@ -1047,6 +1129,14 @@
             }
             if (e.target.closest('#back-to-details-btn')) { renderDetailsModal(currentMediaData.id, currentMediaData.title ? 'movie' : 'tv'); return; }
         
+            const listBtn = e.target.closest('#add-to-list-btn');
+            if (listBtn) {
+                const wasAdded = toggleMyList(currentMediaData);
+                listBtn.innerHTML = wasAdded ? checkIcon : plusIcon;
+                listBtn.setAttribute('title', wasAdded ? 'Remover da Minha Lista' : 'Adicionar à Minha Lista');
+                return;
+            }
+
             const trailerBtn = e.target.closest('.play-trailer-btn');
             if (trailerBtn) {
                 const trailerKey = trailerBtn.dataset.trailerKey;

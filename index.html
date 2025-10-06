@@ -106,7 +106,7 @@
             transition: opacity 0.3s ease-in-out;
         }
         #modal-content {
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, width 0.3s ease-in-out, height 0.3s ease-in-out;
             transform: scale(0.9);
             opacity: 0;
         }
@@ -174,10 +174,103 @@
             border-color: white;
             box-shadow: 0 0 0 2px #141414, 0 0 0 4px #E50914;
         }
+
+        .player-season-select {
+            background-color: #202020;
+            border: 1px solid #4a5568;
+            padding: 0.25rem 2.5rem 0.25rem 0.75rem; /* py-1 pr-10 pl-3 */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 600; /* font-semibold */
+        }
+        .player-season-select:hover {
+            border-color: #a0aec0; /* gray-400 */
+        }
+        .player-season-select:focus {
+             box-shadow: 0 0 0 2px #141414, 0 0 0 4px #E50914;
+             border-color: white;
+        }
         
         /* Estilos da tela de Abertura */
         #splash-screen {
             transition: opacity 0.7s ease-out;
+        }
+        
+        /* --- ESTILOS DO PLAYER CUSTOMIZADO (CORRIGIDO) --- */
+        #custom-player-container {
+            position: relative;
+            width: 100%;
+            height: 100%; /* Modificado para ocupar a altura total no modo player */
+            background-color: black;
+        }
+        #player-controls-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.7) 100%);
+            pointer-events: none; /* O overlay em si NUNCA captura cliques, permitindo que passem para o iframe. */
+        }
+        #custom-player-container:hover #player-controls-overlay {
+            opacity: 1; /* No hover, apenas tornamos o overlay visível. */
+        }
+        .player-control-btn {
+            background-color: rgba(40, 40, 40, 0.7);
+            border-radius: 9999px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            pointer-events: auto; /* CORREÇÃO: Isso faz com que APENAS os botões sejam clicáveis, e não o overlay inteiro. */
+        }
+        .player-control-btn:hover {
+            background-color: rgba(60, 60, 60, 0.9);
+        }
+
+        /* --- ESTILOS DO PAINEL DE EPISÓDIOS DO PLAYER --- */
+        #player-episode-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 100%;
+            max-width: 400px;
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 20;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            overflow-y: auto;
+        }
+        #player-episode-panel.open {
+            transform: translateX(0);
+        }
+        #player-episode-panel .episode-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        #player-episode-panel .episode-item.playing {
+            background-color: #E50914;
+            font-weight: bold;
+        }
+
+        /* --- ESTILOS DO PLAYER EM TELA CHEIA (MODIFICADO) --- */
+        #details-modal.player-mode {
+            /* Sobrescreve a centralização para permitir que o player preencha a tela */
+            align-items: stretch;
+            justify-content: stretch;
+        }
+        #modal-content.player-mode-content {
+            /* Faz o contêiner do player preencher a tela */
+            width: 100%;
+            height: 100%;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+            background-color: #000;
+            overflow: hidden; /* Previne barras de rolagem na visualização do player */
         }
 
     </style>
@@ -363,8 +456,6 @@
         
         const isItemInMyList = (mediaId) => {
             const list = getMyList();
-            // CORREÇÃO: O ID do dataset vem como string, e o ID salvo é um número.
-            // Convertendo para número para garantir que a comparação (===) funcione.
             return list.some(item => item.id === Number(mediaId));
         };
 
@@ -373,9 +464,9 @@
             const mediaId = mediaItem.id;
             const itemIndex = list.findIndex(item => item.id === mediaId);
 
-            if (itemIndex > -1) { // Item existe, então remove
+            if (itemIndex > -1) {
                 list.splice(itemIndex, 1);
-            } else { // Item não existe, então adiciona
+            } else {
                 const itemToAdd = {
                     id: mediaItem.id,
                     poster_path: mediaItem.poster_path,
@@ -383,10 +474,10 @@
                     name: mediaItem.name,
                     media_type: mediaItem.title ? 'movie' : 'tv'
                 };
-                list.unshift(itemToAdd); // Adiciona no início
+                list.unshift(itemToAdd);
             }
             saveMyList(list);
-            return itemIndex === -1; // Retorna true se foi adicionado, false se foi removido
+            return itemIndex === -1;
         };
         
         // --- FUNÇÕES DE RENDERIZAÇÃO ---
@@ -879,8 +970,18 @@
         };
         
         // --- MODAL, PLAYER E EVENT LISTENERS ---
-        const showModal = () => { modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('show'), 10); };
-        const hideModal = () => { modal.classList.remove('show'); setTimeout(() => { modal.classList.add('hidden'); modalContent.innerHTML = ''; currentMediaData = null; }, 300); };
+        const showModal = () => { 
+            document.body.style.overflow = 'hidden';
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.add('show'), 10); 
+        };
+        const hideModal = () => { 
+            document.body.style.overflow = '';
+            modal.classList.remove('show'); 
+            modal.classList.remove('player-mode');
+            modalContent.classList.remove('player-mode-content');
+            setTimeout(() => { modal.classList.add('hidden'); modalContent.innerHTML = ''; currentMediaData = null; }, 300); 
+        };
         const smoothScrollTo = (element, to, duration, callback) => { const start = element.scrollLeft; const change = to - start; let startTime = null; const easeInOutQuad = (t, b, c, d) => { t /= d / 2; if (t < 1) return c / 2 * t * t + b; t--; return -c / 2 * (t * (t - 2) - 1) + b; }; const animateScroll = (currentTime) => { if (startTime === null) startTime = currentTime; const timeElapsed = currentTime - startTime; element.scrollLeft = easeInOutQuad(timeElapsed, start, change, duration); if (timeElapsed < duration) { requestAnimationFrame(animateScroll); } else { element.scrollLeft = to; if (callback) callback(); } }; requestAnimationFrame(animateScroll); };
         
         const renderEpisodeList = async (tvId, seasonNumber) => {
@@ -912,6 +1013,9 @@
         };
 
         const renderDetailsModal = async (mediaId, mediaType) => {
+            modal.classList.remove('player-mode');
+            modalContent.classList.remove('player-mode-content');
+            
             showModal(); 
             showLoading(modalContent); 
             
@@ -980,10 +1084,10 @@
             let recommendationsHtml = '';
             if(recommendationsData && recommendationsData.results && recommendationsData.results.length > 0) {
                  recommendationsHtml = `
-                     <div class="mt-8">
-                         ${createCarousel('Títulos Semelhantes', recommendationsData.results, 'recommendations-carousel')}
-                     </div>
-                 `;
+                          <div class="mt-8">
+                                ${createCarousel('Títulos Semelhantes', recommendationsData.results, 'recommendations-carousel')}
+                          </div>
+                     `;
             }
 
             modalContent.innerHTML = `
@@ -1008,15 +1112,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div class="md:col-span-2">
                              <div class="flex items-center space-x-4 text-gray-300">
-                                <p class="flex items-center font-bold text-lg">
-                                    <svg class="w-5 h-5 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
-                                    ${details.vote_average.toFixed(1)}
-                                </p>
-                                <p>${year}</p>
-                                ${runtimeText ? `<p>${runtimeText}</p>` : ''}
-                                ${mediaType === 'tv' ? `<p>${details.number_of_seasons} Temporada${details.number_of_seasons > 1 ? 's' : ''}</p>`: ''}
-                                <span class="border px-1 text-xs">${rating}</span>
-                             </div>
+                                 <p class="flex items-center font-bold text-lg">
+                                     <svg class="w-5 h-5 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                                     ${details.vote_average.toFixed(1)}
+                                 </p>
+                                 <p>${year}</p>
+                                 ${runtimeText ? `<p>${runtimeText}</p>` : ''}
+                                 ${mediaType === 'tv' ? `<p>${details.number_of_seasons} Temporada${details.number_of_seasons > 1 ? 's' : ''}</p>`: ''}
+                                 <span class="border px-1 text-xs">${rating}</span>
+                               </div>
                              <p class="mt-4 text-base">${overview}</p>
                         </div>
                         <div class="text-sm">
@@ -1050,20 +1154,121 @@
             }
         };
 
-        const showPlayer = (url) => { modalContent.innerHTML = `<div class="bg-black w-full" style="aspect-ratio: 16 / 9;"> <div class="w-full h-full relative"> <button id="back-to-details-btn" class="absolute top-2 left-2 z-20 bg-black bg-opacity-50 text-white rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold hover:bg-opacity-75 transition">&larr;</button> <iframe src="${url}" class="absolute top-0 left-0 w-full h-full border-0" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer; clipboard-write" allowfullscreen></iframe> </div> </div>`; };
+        const renderPlayerEpisodeList = async (mediaId, currentSeasonNum, currentEpisodeNum) => {
+            const panel = document.getElementById('player-episode-panel');
+            if (!panel) return;
+
+            const seasons = currentMediaData.seasons.filter(s => s.season_number > 0);
+            const seasonDetails = await fetchTMDB(`/tv/${mediaId}/season/${currentSeasonNum}`);
+
+            if (!seasonDetails || !seasonDetails.episodes) {
+                panel.innerHTML = '<p class="p-4 text-gray-400">Não foi possível carregar os episódios.</p>';
+                return;
+            }
+
+            panel.innerHTML = `
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4 h-10">
+                        <div class="flex-1">
+                           <h3 class="text-xl font-bold">Episódios</h3>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <select id="player-season-selector" class="custom-select player-season-select">
+                                ${seasons.map(s => `<option value="${s.season_number}" ${s.season_number == currentSeasonNum ? 'selected' : ''}>${s.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="flex-1 flex justify-end">
+                            <button id="close-player-episodes-btn" class="text-3xl text-gray-400 hover:text-white">&times;</button>
+                        </div>
+                    </div>
+                    <div id="player-episode-list" class="flex flex-col gap-2">
+                        ${seasonDetails.episodes.map(ep => `
+                            <div class="episode-item flex items-start gap-3 p-2 rounded-lg cursor-pointer ${ep.episode_number == currentEpisodeNum ? 'playing' : ''}" data-season-number="${currentSeasonNum}" data-episode-number="${ep.episode_number}">
+                                <img src="${ep.still_path ? `https://image.tmdb.org/t/p/w200${ep.still_path}` : NO_POSTER_URL}" alt="${ep.name}" class="w-28 object-cover rounded-md aspect-video">
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-sm">${ep.episode_number}. ${ep.name}</h4>
+                                    <p class="text-xs text-gray-400 mt-1">${ep.overview.substring(0, 80)}${ep.overview.length > 80 ? '...' : ''}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            const seasonSelector = document.getElementById('player-season-selector');
+            if (seasonSelector) {
+                seasonSelector.addEventListener('change', (e) => {
+                    renderPlayerEpisodeList(mediaId, e.target.value, 1);
+                });
+            }
+        };
+
+
+        const showCustomPlayer = ({ mediaId, mediaType, season = 1, episode = 1, isTrailer = false, trailerKey = '' }) => {
+            let playerUrl = '';
+            let titleText = currentMediaData?.title || currentMediaData?.name || '';
+            let nextEpisodeButtonHtml = '';
+            let episodeListButtonHtml = '';
+
+            modal.classList.add('player-mode');
+            modalContent.classList.add('player-mode-content');
+
+            if (isTrailer) {
+                playerUrl = `https://www.youtube.com/embed/${trailerKey}?autoplay=1`;
+                titleText = `${titleText} (Trailer)`;
+            } else {
+                saveToWatchedHistory(currentMediaData);
+                if (mediaType === 'tv') {
+                    playerUrl = `https://vidsrc.xyz/embed/tv/${mediaId}/${season}/${episode}?ds_lang=pt`;
+                    titleText = `${titleText} - T${season}:E${episode}`;
+                    
+                    const currentSeason = currentMediaData.seasons.find(s => s.season_number === Number(season));
+                    if (currentSeason && episode < currentSeason.episode_count) {
+                        const nextEpisode = Number(episode) + 1;
+                        nextEpisodeButtonHtml = `<button id="next-episode-btn" class="player-control-btn" title="Próximo Episódio" data-season="${season}" data-episode="${nextEpisode}"><i class="fas fa-step-forward"></i></button>`;
+                    }
+                    episodeListButtonHtml = `<button id="toggle-episodes-btn" class="player-control-btn" title="Lista de Episódios"><i class="fas fa-list-ul"></i></button>`;
+                } else {
+                    playerUrl = `https://vidsrc.xyz/embed/movie/${mediaId}?ds_lang=pt`;
+                }
+            }
+
+            modalContent.innerHTML = `
+                <div class="w-full h-full relative bg-black overflow-hidden">
+                    <div id="custom-player-container" class="w-full h-full">
+                        <iframe src="${playerUrl}" class="absolute top-0 left-0 w-full h-full border-0" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer; clipboard-write" allowfullscreen></iframe>
+                        <div id="player-controls-overlay">
+                            <div class="flex justify-between items-center w-full p-4">
+                                <!-- Controles da Esquerda (Back e Título) -->
+                                <div class="flex items-center gap-4">
+                                    <button id="back-to-details-btn" class="player-control-btn" title="Voltar"><i class="fas fa-arrow-left"></i></button>
+                                    <h3 class="text-xl font-bold truncate">${titleText}</h3>
+                                </div>
+                                <!-- Controles da Direita (Episódios e Próximo) -->
+                                <div class="flex items-center gap-4">
+                                    ${episodeListButtonHtml}
+                                    ${nextEpisodeButtonHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="player-episode-panel"></div>
+                </div>`;
+
+            if (mediaType === 'tv' && !isTrailer) {
+                renderPlayerEpisodeList(mediaId, season, episode);
+            }
+        };
         
         contentArea.addEventListener('click', async e => {
             const heroPlayBtn = e.target.closest('.hero-play-btn');
             if (heroPlayBtn) {
                 const { id, type } = heroPlayBtn.dataset;
-                const mediaDetails = await fetchTMDB(`/${type}/${id}`);
+                const mediaDetails = await fetchTMDB(`/${type}/${id}`); 
                 if (mediaDetails) {
-                    saveToWatchedHistory(mediaDetails);
-                    const playerUrl = type === 'tv'
-                        ? `https://vidsrc.xyz/embed/tv/${id}/1/1?ds_lang=pt`
-                        : `https://vidsrc.xyz/embed/movie/${id}?ds_lang=pt`;
+                    currentMediaData = mediaDetails;
                     showModal();
-                    showPlayer(playerUrl);
+                    showCustomPlayer({ mediaId: id, mediaType: type });
                 }
                 return;
             }
@@ -1114,20 +1319,27 @@
         
         modalContent.addEventListener('click', e => {
             if (e.target.closest('.play-movie-btn')) { 
-                saveToWatchedHistory(currentMediaData); 
-                const playerUrl = currentMediaData.seasons 
-                    ? `https://vidsrc.xyz/embed/tv/${currentMediaData.id}/1/1?ds_lang=pt`
-                    : `https://vidsrc.xyz/embed/movie/${currentMediaData.id}?ds_lang=pt`;
-                showPlayer(playerUrl);
+                showCustomPlayer({
+                    mediaId: currentMediaData.id,
+                    mediaType: currentMediaData.seasons ? 'tv' : 'movie'
+                });
                 return;
             }
             const episodeItem = e.target.closest('.episode-item');
             if (episodeItem) { 
-                saveToWatchedHistory(currentMediaData); 
                 const { seasonNumber, episodeNumber } = episodeItem.dataset; 
-                showPlayer(`https://vidsrc.xyz/embed/tv/${currentMediaData.id}/${seasonNumber}/${episodeNumber}?ds_lang=pt`); return; 
+                showCustomPlayer({
+                    mediaId: currentMediaData.id,
+                    mediaType: 'tv',
+                    season: seasonNumber,
+                    episode: episodeNumber
+                });
+                return; 
             }
-            if (e.target.closest('#back-to-details-btn')) { renderDetailsModal(currentMediaData.id, currentMediaData.title ? 'movie' : 'tv'); return; }
+            if (e.target.closest('#back-to-details-btn')) { 
+                renderDetailsModal(currentMediaData.id, currentMediaData.title ? 'movie' : 'tv'); 
+                return; 
+            }
         
             const listBtn = e.target.closest('#add-to-list-btn');
             if (listBtn) {
@@ -1140,7 +1352,42 @@
             const trailerBtn = e.target.closest('.play-trailer-btn');
             if (trailerBtn) {
                 const trailerKey = trailerBtn.dataset.trailerKey;
-                showPlayer(`https://www.youtube.com/embed/${trailerKey}?autoplay=1`);
+                showCustomPlayer({
+                    mediaId: currentMediaData.id,
+                    mediaType: currentMediaData.title ? 'movie' : 'tv',
+                    isTrailer: true,
+                    trailerKey: trailerKey
+                });
+                return;
+            }
+
+            const nextEpisodeBtn = e.target.closest('#next-episode-btn');
+            if (nextEpisodeBtn) {
+                const { season, episode } = nextEpisodeBtn.dataset;
+                showCustomPlayer({
+                    mediaId: currentMediaData.id,
+                    mediaType: 'tv',
+                    season: season,
+                    episode: episode
+                });
+                return;
+            }
+
+            const toggleEpisodesBtn = e.target.closest('#toggle-episodes-btn');
+            if (toggleEpisodesBtn) {
+                const panel = document.getElementById('player-episode-panel');
+                if (panel) {
+                    panel.classList.toggle('open');
+                }
+                return;
+            }
+
+            const closePlayerEpisodesBtn = e.target.closest('#close-player-episodes-btn');
+            if (closePlayerEpisodesBtn) {
+                const panel = document.getElementById('player-episode-panel');
+                if (panel) {
+                    panel.classList.remove('open');
+                }
                 return;
             }
 
@@ -1234,5 +1481,4 @@
     </script>
 </body>
 </html>
-
 

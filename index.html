@@ -1663,34 +1663,68 @@
             }
         };
 
-        const showCustomPlayer = ({ mediaId, mediaType, season = 1, episode = 1, isTrailer = false, trailerKey = '' }) => {
-            let playerUrl = '';
-            let titleText = currentMediaData?.title || currentMediaData?.name || '';
-            let nextEpisodeButtonHtml = '';
-            let episodeListButtonHtml = '';
+const showCustomPlayer = ({ mediaId, mediaType, season = 1, episode = 1, isTrailer = false, trailerKey = '' }) => {
+            let playerUrl = '';
+            let titleText = currentMediaData?.title || currentMediaData?.name || '';
+            let nextEpisodeButtonHtml = '';
+            let episodeListButtonHtml = '';
 
-            modal.classList.add('player-mode');
-            modalContent.classList.add('player-mode-content');
+            modal.classList.add('player-mode');
+            modalContent.classList.add('player-mode-content');
 
-            if (isTrailer) {
-                playerUrl = `https://www.youtube.com/embed/${trailerKey}?autoplay=1`;
-                titleText = `${titleText} (Trailer)`;
-            } else {
-                saveToWatchedHistory(currentMediaData);
-                if (mediaType === 'tv') {
-                    playerUrl = \https://vidsrc.cc/v2/embed/movie/${id};
-                    titleText = `${titleText} - T${season}:E${episode}`;
-                    
-                    const currentSeason = currentMediaData.seasons.find(s => s.season_number === Number(season));
-                    if (currentSeason && episode < currentSeason.episode_count) {
-                        const nextEpisode = Number(episode) + 1;
-                        nextEpisodeButtonHtml = `<button id="next-episode-btn" class="player-control-btn" title="Próximo Episódio" data-season="${season}" data-episode="${nextEpisode}"><i class="fas fa-step-forward"></i></button>`;
-                    }
-                    episodeListButtonHtml = `<button id="toggle-episodes-btn" class="player-control-btn" title="Lista de Episódios"><i class="fas fa-list-ul"></i></button>`;
-                } else {
-                    playerUrl = \https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode};
-                }
-            }
+            if (isTrailer) {
+                playerUrl = `https://www.youtube.com/embed/${trailerKey}?autoplay=1`;
+                titleText = `${titleText} (Trailer)`;
+            } else {
+                saveToWatchedHistory(currentMediaData);
+                
+                // LÓGICA DE SÉRIE (TV)
+                if (mediaType === 'tv') {
+                    titleText = `${titleText} - T${season}:E${episode}`;
+                    
+                    // COLE SUA NOVA URL DE SÉRIE AQUI:
+                    playerUrl = `https://vidsrc.cc/v2/embed/tv/${mediaId}/${season}/${episode}`; // <--- MUDE ESTA LINHA
+
+                    // Lógica do botão "Próximo Episódio"
+                    const currentSeason = currentMediaData.seasons.find(s => s.season_number === Number(season));
+                    if (currentSeason && episode < currentSeason.episode_count) {
+                        const nextEpisode = Number(episode) + 1;
+                        nextEpisodeButtonHtml = `<button id="next-episode-btn" class="player-control-btn" title="Próximo Episódio" data-season="${season}" data-episode="${nextEpisode}"><i class="fas fa-step-forward"></i></button>`;
+                    }
+                    episodeListButtonHtml = `<button id="toggle-episodes-btn" class="player-control-btn" title="Lista de Episódios"><i class="fas fa-list-ul"></i></button>`;
+                
+                // LÓGICA DE FILME (MOVIE)
+                } else {
+                    // COLE SUA NOVA URL DE FILME AQUI:
+                    playerUrl = `https://vidsrc.cc/v2/embed/movie/${mediaId}`; // <--- MUDE ESTA LINHA
+                }
+            }
+
+            // O resto da função continua igual...
+            modalContent.innerHTML = `
+                <div class="w-full h-full relative bg-black overflow-hidden">
+                    <div id="custom-player-container" class="w-full h-full">
+                        <iframe src="${playerUrl}" class="absolute top-0 left-0 w-full h-full border-0" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer; clipboard-write" allowfullscreen></iframe>
+                        <div id="player-controls-overlay">
+                            <div class="flex justify-between items-center w-full p-4">
+                                <div class="flex items-center gap-4">
+                                    <button id="back-to-details-btn" class="player-control-btn" title="Voltar"><i class="fas fa-arrow-left"></i></button>
+                                    <h3 class="text-xl font-bold truncate">${titleText}</h3>
+                                </div>
+                   Mandei                   <div class="flex items-center gap-4">
+                                    ${episodeListButtonHtml}
+                                    ${nextEpisodeButtonHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="player-episode-panel"></div>
+                </div>`;
+
+            if (mediaType === 'tv' && !isTrailer) {
+                renderPlayerEpisodeList(mediaId, season, episode);
+            }
+        };
 
             modalContent.innerHTML = `
                 <div class="w-full h-full relative bg-black overflow-hidden">

@@ -1678,7 +1678,7 @@
             } else {
                 saveToWatchedHistory(currentMediaData);
                 if (mediaType === 'tv') {
-                    playerUrl = `https://vidsrc.xyz/embed/tv/${mediaId}/${season}/${episode}?ds_lang=pt`;
+                    playerUrl = \https://vidsrc.cc/v2/embed/movie/${id}`;`?ds_lang=pt`;
                     titleText = `${titleText} - T${season}:E${episode}`;
                     
                     const currentSeason = currentMediaData.seasons.find(s => s.season_number === Number(season));
@@ -1688,7 +1688,7 @@
                     }
                     episodeListButtonHtml = `<button id="toggle-episodes-btn" class="player-control-btn" title="Lista de Episódios"><i class="fas fa-list-ul"></i></button>`;
                 } else {
-                    playerUrl = `https://vidsrc.xyz/embed/movie/${mediaId}?ds_lang=pt`;
+                    playerUrl = \[link suspeito removido]${id}/${season}/${episode}`;`?ds_lang=pt`;
                 }
             }
 

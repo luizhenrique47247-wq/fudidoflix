@@ -1255,13 +1255,22 @@ class FudidoFlixApp {
             currentIcon.remove();
         }
         
-        const iconName = this.#isItemInMyList(id, type) ? 'check' : 'plus';
-        
-        const newIcon = document.createElement('i');
-        newIcon.setAttribute('data-lucide', iconName);
-        newIcon.className = 'w-5 h-5';
-        
-        dom.detailsModalAddListButton.appendChild(newIcon);
+        const isInList = this.#isItemInMyList(id, type); // Primeiro, guarde o resultado
+const iconName = isInList ? 'check' : 'plus';
+
+const newIcon = document.createElement('i');
+newIcon.setAttribute('data-lucide', iconName);
+
+// AQUI ESTÁ A MUDANÇA:
+if (isInList) {
+    // Se for o check, adiciona a cor verde
+    newIcon.className = 'w-5 h-5 text-green-500'; 
+} else {
+    // Se for o plus, continua com a cor padrão (branca)
+    newIcon.className = 'w-5 h-5';
+}
+
+dom.detailsModalAddListButton.appendChild(newIcon);
         
         if (window.lucide) {
             lucide.createIcons({

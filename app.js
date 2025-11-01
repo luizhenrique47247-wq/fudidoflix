@@ -454,13 +454,13 @@ class FudidoFlixApp {
 
     #setActiveNavLink(activeLink) {
         dom.mainNavigation.querySelectorAll('a').forEach(link => {
-            link.classList.remove('font-semibold');
+            link.classList.remove('text-[#E50914]');
             if (!link.classList.contains('hover:text-gray-300')) {
                 link.classList.add('hover:text-gray-300');
             }
         });
         if (activeLink) {
-            activeLink.classList.add('font-semibold');
+            activeLink.classList.add('text-[#E50914]');
             activeLink.classList.remove('hover:text-gray-300');
         }
     }

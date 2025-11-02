@@ -196,26 +196,43 @@ body::-webkit-scrollbar {
 
 
 /* ========================================================================
-   ESTILOS DA GRADE (PÁGINA EXPLORAR/BUSCA)
+   ESTILOS DA GRADE (PÁGINA EXPLORAR/BUSCA) - MODIFICADO
    ========================================================================= */
 
-/* Estilização de cada pôster (GRADE) */
+/* NOVO: Wrapper para cada card na grade */
+.poster-grid-wrapper {
+    position: relative;
+    display: block;
+    border-radius: 4px; /* Para o scale não mostrar cantos vivos */
+    transition: transform 0.3s ease-out;
+    cursor: pointer;
+}
+
+/* Estilização de cada pôster (GRADE) - (Sem hover de transform) */
 .poster-grid {
     width: 100%; /* Ocupa a célula da grade */
     height: auto; /* Mantém a proporção */
     aspect-ratio: 2 / 3; /* Proporção de pôster (largura/altura) */
     object-fit: cover;
     border-radius: 4px;
-    transition: transform 0.3s ease-out, filter 0.3s;
-    cursor: pointer;
+    transition: filter 0.3s; /* Apenas transição do filtro */
+    display: block; /* Remove espaço extra de imagem */
 }
 
-/* Efeito de zoom e brilho ao passar o mouse (GRADE) */
-.poster-grid:hover {
+/* Efeito de zoom no WRAPPER ao passar o mouse */
+.poster-grid-wrapper:hover {
     transform: scale(1.05);
-    filter: brightness(1.1);
     z-index: 10; /* Para ficar sobre os vizinhos */
-    position: relative; /* Necessário para z-index funcionar */
+}
+
+/* Efeito de brilho na IMAGEM ao passar o mouse no WRAPPER */
+.poster-grid-wrapper:hover .poster-grid {
+    filter: brightness(1.1);
+}
+
+/* Mostra o overlay (copiado do carrossel) ao passar o mouse no WRAPPER */
+.poster-grid-wrapper:hover .poster-title-overlay {
+    opacity: 1;
 }
 
 /* ========================================================================

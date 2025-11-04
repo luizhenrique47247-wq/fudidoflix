@@ -1,13 +1,11 @@
-// Exporta a configuração das categorias para a PÁGINA INICIAL (NOVA ORDEM)
 export const categories = {
     default: [
         { title: "Em Alta Hoje", endpoint: "/trending/all/day" },
-        { title: "Últimos Assistidos", endpoint: "localstorage" }, // Identificador especial
-        { title: "Séries Aclamadas pela Crítica", endpoint: "/tv/top_rated?vote_count.gte=1000" }, // Adicionado contagem de votos
+        { title: "Últimos Assistidos", endpoint: "localstorage" }, 
+        { title: "Séries Aclamadas pela Crítica", endpoint: "/tv/top_rated?vote_count.gte=1000" }, 
         { title: "Filmes de Terror", endpoint: "/discover/movie?with_genres=27" },
-        { title: "Filmes Suspense", endpoint: "/discover/movie?with_genres=53" }, // Gênero Thriller
+        { title: "Filmes Suspense", endpoint: "/discover/movie?with_genres=53" }, 
         { title: "Filmes Populares", endpoint: "/movie/popular" },
-        { title: "Animes", endpoint: "/discover/tv?with_genres=16&sort_by=popularity.desc" }, // Animação TV
         { title: "Documentários", endpoint: "/discover/movie?with_genres=99" },
         { title: "Originais e Exclusivos Netflix", endpoint: "/discover/tv?with_networks=213&language=pt-BR" }, // ID Netflix
         { title: "Originais e Exclusivos Prime Video", endpoint: "/discover/tv?with_networks=1024&language=pt-BR" }, // ID Prime Video
@@ -19,17 +17,6 @@ export const categories = {
         { title: "Filmes Brasileiros", endpoint: "/discover/movie?with_origin_country=BR&sort_by=popularity.desc" },
     ],
 };
-
-// IDs de Gênero do TMDB (para referência - mantidos)
-// Filmes: 28: Ação, 12: Aventura, 16: Animação, 35: Comédia, 80: Crime, 99: Documentário,
-// 18: Drama, 10751: Família, 14: Fantasia, 36: História, 27: Terror, 10402: Música,
-// 9648: Mistério, 10749: Romance, 878: Ficção Científica, 10770: TV, 53: Thriller,
-// 10752: Guerra, 37: Faroeste
-//
-// TV: 10759: Ação & Aventura, 16: Animação, 35: Comédia, 80: Crime, 99: Doc, 18: Drama,
-// 10751: Família, 10762: Kids, 9648: Mistério, 10763: News, 10764: Reality,
-// 10765: Sci-Fi & Fantasy, 10766: Soap, 10767: Talk, 10768: War & Politics, 37: Western
-
 
 // Filtros personalizados para a página de Filmes (mantidos)
 export const movieFilters = [

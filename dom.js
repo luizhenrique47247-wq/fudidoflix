@@ -16,6 +16,15 @@ export const dom = {
     searchInput: document.getElementById('search-input'),
     
     // ==========================================================
+    // MUDANÇA (Perfil): Adiciona elementos do perfil
+    // ==========================================================
+    profileButton: document.getElementById('profile-button'),
+    profileMenu: document.getElementById('profile-menu'),
+    profileClearListButton: document.getElementById('profile-clear-list-button'),
+    profileClearHistoryButton: document.getElementById('profile-clear-history-button'),
+    profileLogoutButton: document.getElementById('profile-logout-button'),
+    
+    // ==========================================================
     // MUDANÇA (Request 1): Adiciona o container principal
     // ==========================================================
     mainContent: document.getElementById('main-content'),
@@ -66,6 +75,15 @@ export const dom = {
     seriesSeasonsContainer: document.getElementById('series-seasons-container'),
     detailsModalSeasonSelect: document.getElementById('details-modal-season-select'),
     detailsModalEpisodesList: document.getElementById('details-modal-episodes-list'),
+
+    // ==========================================================
+    // MUDANÇA (Perfil): Modal de Confirmação (NOVO)
+    // ==========================================================
+    confirmationModal: document.getElementById('confirmation-modal'),
+    confirmationModalTitle: document.getElementById('confirmation-modal-title'),
+    confirmationModalMessage: document.getElementById('confirmation-modal-message'),
+    confirmationModalCancelButton: document.getElementById('confirmation-modal-cancel-button'),
+    confirmationModalConfirmButton: document.getElementById('confirmation-modal-confirm-button'),
 
     // Elementos da Intro
     introModal: document.getElementById('intro-modal'),

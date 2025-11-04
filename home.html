@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FudidoFlix - O Seu Streaming, As Suas Regras</title>
+
+    <link rel="icon" type="image/png" href="Cu1XfRE.png">
+
+<script>
+    // SCRIPT 1: O "GUARDA"
+    // Protege a página contra acesso direto se não houver "ingresso"
+    if (sessionStorage.getItem('fudidoFlixAccess') !== 'granted') {
+        // Usa .replace() para não deixar o usuário clicar em "Voltar"
+        window.location.replace('index.html');
+    }
+</script>
+
+<script>
+    // SCRIPT 2: O "LIMPADOR DE URL"
+    // Remove o "/home.html" da barra de endereço
+    (function() {
+        // Pega a URL atual
+        const url = new URL(window.location.href);
+        
+        // Verifica se a URL termina com /home.html
+        if (url.pathname.endsWith('/home.html')) {
+            // Calcula o novo caminho (basicamente, o diretório pai)
+            const novoPath = url.pathname.substring(0, url.pathname.lastIndexOf('/home.html')) + '/';
+            
+            // Troca a URL na barra de endereço sem recarregar a página
+            history.replaceState({}, '', novoPath);
+        }
+    })();
+</script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="text-white">
+
+    <header id="main-nav" class="fixed top-0 left-0 right-0 z-50 px-4 md:px-16 py-4 flex justify-between items-center opacity-0 transition-opacity duration-500 ease-in-out">
+        <div class="flex items-center space-x-8">
+            <h1 id="logo" class="text-2xl md:text-3xl font-bold text-[#E50914] cursor-pointer">FUDIDOFLIX</h1>
+
+                <nav id="main-navigation" class="hidden md:flex space-x-4">
+                <a href="#" id="nav-inicio" class="font-semibold hover:text-gray-300">Início</a>
+                <a href="#" id="nav-series" class="font-semibold hover:text-gray-300">Séries</a>
+                <a href="#" id="nav-filmes" class="font-semibold hover:text-gray-300">Filmes</a>
+                <a href="#" id="nav-animes" class="font-semibold hover:text-gray-300">Animes</a>
+                <a href="#" id="nav-minha-lista" class="font-semibold hover:text-gray-300">Minha lista</a>
+                <a href="#" id="nav-sorte" class="font-semibold flex items-center hover:text-gray-300">
+                    <i data-lucide="dices" class="w-5 h-5 mr-1"></i> Sorte
+                </a>
+            </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+
+            <input type="text" id="search-input" placeholder="Títulos, gente, gêneros" class="hidden w-0 bg-black/50 border border-gray-700 text-white text-sm rounded-md px-3 py-1 focus:outline-none focus:border-white placeholder-gray-500">
+
+                <button id="search-button" class="cursor-pointer hover:text-gray-300">
+                <i data-lucide="search" class="w-6 h-6" stroke-width="3.5"></i>
+            </button>
+
+            <div class="relative">
+                <button id="profile-button" class="cursor-pointer hover:text-gray-300 mt-1.5">
+                    <i data-lucide="user-circle" class="w-6 h-6" stroke-width="2.7"></i>
+                </button>
+                
+                <div id="profile-menu" class="hidden absolute top-10 right-0 w-48 bg-black/80 backdrop-blur-md border border-gray-800 rounded-md shadow-lg py-1 z-50">
+                    <button id="profile-clear-list-button" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700/70 flex items-center">
+                        <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i>
+                        Limpar Minha Lista
+                    </button>
+                    <button id="profile-clear-history-button" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700/70 flex items-center">
+                        <i data-lucide="history" class="w-4 h-4 mr-2"></i>
+                        Limpar Histórico
+                    </button>
+                    <button id="profile-logout-button" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-700/70 flex items-center">
+                        <i data-lucide="log-out" class="w-4 h-4 mr-2"></i>
+                        Deslogar da Sessão
+                    </button>
+                </div>
+            </div>
+            </div>
+    </header>
+
+    <main id="main-content" class="opacity-0 transition-opacity duration-500 ease-in-out">
+        <section id="hero" class="relative h-[85vh] min-h-[500px] w-full bg-cover bg-center bg-no-repeat">
+            <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent"></div>
+            <div class="relative z-10 flex flex-col justify-end h-full px-4 md:px-16 pb-24 space-y-4 md:w-2/3"> 
+                <h2 id="hero-title" class="text-4xl md:text-6xl font-extrabold line-clamp-2">Carregando Título...</h2>
+                <p id="hero-overview" class="text-base md:text-lg font-medium line-clamp-3 md:line-clamp-4">
+                    Carregando descrição...
+                </p>
+                <div class="flex space-x-3">
+                    <button id="hero-play-button" class="flex items-center justify-center px-6 py-2 bg-white text-black font-bold rounded-md hover:bg-opacity-80 transition-colors">
+                        <i data-lucide="play" class="w-6 h-6 mr-2 fill-black"></i>
+                        Assistir
+                    </button>
+                    <button id="hero-info-button" class="flex items-center justify-center px-6 py-2 bg-gray-500/70 text-white font-bold rounded-md hover:bg-opacity-50 transition-colors">
+                        <i data-lucide="info" class="w-6 h-6 mr-2"></i>
+                        Mais Informações
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="content-rows" class="px-4 md:px-16 py-8 space-y-8 -mt-16 relative z-10">
+            </section>
+    </main>
+
+    <footer class="text-center text-red-500 text-sm py-8 border-t border-gray-800 mt-12">
+        Você chegou ao fim!
+    </footer>
+
+    <div id="player-modal" class="fixed inset-0 z-[100] bg-black hidden">
+        <div id="player-modal-content" class="relative w-full h-full bg-black overflow-hidden">
+            
+            <button id="close-player" class="absolute top-4 left-4 md:top-8 md:left-8 text-white bg-gray-900/80 hover:bg-gray-700/80 rounded-full p-2.5 z-[110]">
+                <i data-lucide="x" class="w-7 h-7"></i>
+            </button>
+
+            <div id="player-controls-tv" class="absolute top-4 right-4 md:top-8 md:right-8 z-[110] flex space-x-3 hidden">
+                <button id="player-episodes-button" class="text-white bg-gray-900/80 hover:bg-gray-700/80 rounded-full p-2.5" aria-label="Ver lista de episódios">
+                    <i data-lucide="list-video" class="w-7 h-7"></i>
+                </button>
+                <button id="player-next-button" class="text-white bg-gray-900/80 hover:bg-gray-700/80 rounded-full p-2.5" aria-label="Próximo episódio">
+                    <i data-lucide="skip-forward" class="w-7 h-7"></i>
+                </button>
+            </div>
+            
+            <div id="player-container" class="w-full h-full overflow-hidden">
+                </div>
+            
+            <div id="player-ep-list-panel" class="player-episode-panel">
+                <div class="flex justify-between items-center p-4">
+                    <h4 class="text-2xl font-bold">Episódios</h4>
+                    <button id="player-ep-list-close-button" class="text-gray-400 hover:text-white">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <select id="player-ep-list-season-select" class="p-2 w-full rounded bg-gray-800 text-white border border-gray-700 text-sm">
+                        </select>
+                </div>
+                <ul id="player-ep-list-container" class="overflow-y-auto h-[calc(100%-140px)]">
+                    </ul>
+            </div>
+            
+        </div>
+    </div>
+
+    <div id="details-modal" class="fixed inset-0 z-[100] details-modal-backdrop flex items-center justify-center p-4 hidden">
+        <div class="relative w-full max-w-4xl details-modal-content">
+            <button id="close-details-modal" class="absolute top-4 right-4 text-white bg-gray-900/80 hover:bg-gray-700/80 rounded-full p-2.5 z-20">
+                <i data-lucide="x" class="w-7 h-7"></i>
+            </button>
+            <div id="details-modal-backdrop-image" class="relative w-full h-72 md:h-96 bg-cover bg-center rounded-t-lg">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent"></div>
+
+                <div class="absolute bottom-6 left-6 right-6 z-10">
+                    <h3 id="details-modal-title" class="text-3xl md:text-5xl font-extrabold text-white leading-tight drop-shadow-lg">Carregando...</h3>
+                    <div class="flex items-center space-x-3 mt-4">
+                        <button id="details-modal-play-button" class="flex items-center px-5 py-2 bg-white text-black font-bold rounded-md hover:bg-opacity-80 transition-colors text-lg">
+                            <i data-lucide="play" class="w-6 h-6 mr-2 fill-black"></i>
+                            Assistir
+                        </button>
+                        <button id="details-modal-trailer-button" class="flex items-center px-5 py-2 bg-gray-500/70 text-white font-bold rounded-md hover:bg-opacity-50 transition-colors text-lg">
+                            <i data-lucide="clapperboard" class="w-6 h-6 mr-2"></i> Trailer
+                        </button>
+                        
+                        <button id="details-modal-add-list-button" class="flex items-center justify-center w-10 h-10 bg-gray-600/70 hover:bg-gray-500/70 rounded-full transition-colors text-white">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2">
+                    <div class="flex items-center text-sm font-normal text-gray-400 mb-4 flex-wrap"> 
+                        <span id="details-modal-rating" class="text-green-500 font-semibold mr-3">--%</span>
+                        <span id="details-modal-release-date" class="mr-3">----</span>
+                        <span id="details-modal-runtime" class="mr-3">--h --min</span>
+                        <span id="details-modal-seasons" class="mr-3 hidden">-- Temporada(s)</span> <span id="details-modal-age-rating" class="border border-gray-500 px-1 py-0.5 text-xs rounded">--</span>
+                    </div>
+                    <p id="details-modal-overview" class="text-sm text-gray-300 leading-relaxed mb-6"></p>
+
+                </div>
+
+                <div class="md:col-span-1 text-sm text-gray-300 space-y-3">
+                    <p><span class="text-gray-500">Elenco:</span> <span id="details-modal-cast">Carregando...</span></p>
+                    <p><span class="text-gray-500">Gêneros:</span> <span id="details-modal-genres">Carregando...</span></p>
+                    <p><span class="text-gray-500">Este título é:</span> <span id="details-modal-tags">Carregando...</span></p>
+                </div>
+            </div>
+
+            <div id="series-seasons-container" class="px-6 md:px-8 pb-6 md:pb-8 mt-6 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-2xl font-bold">Episódios</h4>
+                    <select id="details-modal-season-select" class="p-2 rounded bg-gray-800 text-white border border-gray-700 text-sm">
+                        </select>
+                </div>
+                <ul id="details-modal-episodes-list">
+                    </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmation-modal" class="fixed inset-0 z-[150] confirmation-backdrop flex items-center justify-center p-4 hidden">
+        <div id="confirmation-modal-content" class="bg-[#181818] rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h4 id="confirmation-modal-title" class="text-xl font-bold text-white mb-3">Tem certeza?</h4>
+            <p id="confirmation-modal-message" class="text-gray-300 text-sm mb-6">Esta ação não pode ser desfeita.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="confirmation-modal-cancel-button" class="px-5 py-2 bg-gray-600/70 text-white font-bold rounded-md hover:bg-opacity-50 transition-colors">
+                    Cancelar
+                </button>
+                <button id="confirmation-modal-confirm-button" class="px-5 py-2 bg-[#E50914] text-white font-bold rounded-md hover:bg-opacity-80 transition-colors">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="intro-modal" class="fixed inset-0 z-[200]">
+        <video id="intro-video" class="w-full h-full object-cover" autoplay muted playsinline>
+            <source src="mQfvVxg.mp4" type="video/mp4">
+        </video>
+        <button id="skip-intro-button" class="absolute bottom-10 right-10 z-[201] flex items-center px-4 py-2 bg-black/50 text-white font-semibold rounded-md hover:bg-black/80 transition-colors">
+            <span>Pular Abertura</span>
+        </button>
+    </div>
+
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -5,6 +5,9 @@
  */
 
 import { fetchTMDB, IMG_BASE_URL, IMG_POSTER_URL } from './api.js';
+// ==========================================================
+// MUDANÇA (Estaca Zero): Importa as novas funções do storage
+// ==========================================================
 import * as Storage from './storageService.js';
 
 export class ModalManager {
@@ -157,6 +160,20 @@ export class ModalManager {
                     listItem.classList.add('active');
                 }
 
+                // ==========================================================
+                // MUDANÇA (Estaca Zero): Verifica se assistiu (Olho Vermelho)
+                // ==========================================================
+                const isWatched = Storage.isEpisodeWatched(
+                    this.#currentPlayerItem.id, 
+                    'tv', 
+                    seasonNumber, 
+                    episode.episode_number
+                );
+                const watchedIcon = isWatched 
+                    ? '<i data-lucide="eye" class="w-4 h-4 text-red-500 ml-auto flex-shrink-0 inline-block -translate-y-2"></i>' 
+                    : '';
+                // ==========================================================
+
                 const placeholderImg = 'https://placehold.co/120x70/181818/333?text=EP';
                 const imgSrc = episode.still_path ? `${IMG_POSTER_URL}${episode.still_path}` : placeholderImg;
 
@@ -167,10 +184,19 @@ export class ModalManager {
                         <h5 class="text-white text-base font-semibold mb-1">${episode.name || `Episódio ${episode.episode_number}`}</h5>
                         <p class="text-gray-400 text-xs line-clamp-2">${episode.overview || 'Sem descrição.'}</p>
                         <p class="text-gray-500 text-xs mt-1">${episode.runtime ? `${episode.runtime} min` : ''}</p>
-                    </div>`;
+                    </div>
+                    ${watchedIcon}`; // Adiciona o ícone aqui
 
                 this.#dom.playerEpListContainer.appendChild(listItem);
             });
+            
+            // Recria os ícones Lucide
+            if (window.lucide) {
+                lucide.createIcons({
+                    nodes: this.#dom.playerEpListContainer.querySelectorAll('[data-lucide]')
+                });
+            }
+            
         } else {
             this.#dom.playerEpListContainer.innerHTML = '<li class="text-gray-500 p-4">Nenhum episódio encontrado.</li>';
         }
@@ -253,6 +279,7 @@ export class ModalManager {
             return;
         }
         
+        // Salva no histórico principal (para o carousel "Últimos Assistidos")
         if (itemData) {
              Storage.saveToWatchedHistory({
                  id: id,
@@ -263,6 +290,21 @@ export class ModalManager {
         } else {
              console.warn("[openPlayer] Não foi possível salvar no histórico: itemData não fornecido.");
         }
+
+        // ==========================================================
+        // MUDANÇA (Estaca Zero): Salva no histórico detalhado
+        // ==========================================================
+        try {
+            Storage.saveWatchedEpisode({
+                id: id,
+                type: type,
+                season: season,
+                episode: episode
+            });
+        } catch (e) {
+            console.error("Erro ao salvar no histórico detalhado:", e);
+        }
+        // ==========================================================
 
         try {
             this.#dom.playerContainer.innerHTML = `
@@ -286,7 +328,8 @@ export class ModalManager {
         
         if (window.lucide) { lucide.createIcons(); }
 
-        if (this.#isEpisodePanelOpen) {
+        // Atualiza a lista de episódios no painel (se estiver aberta)
+        if (this.#isEpisodePanelOpen && type === 'tv') {
             this.#displayInPlayerEpisodes(season);
         }
     }
@@ -583,6 +626,33 @@ export class ModalManager {
                  this.#dom.detailsModalSeasonSelect.innerHTML = '';
             }
 
+            // ==========================================================
+            // MUDANÇA (Estaca Zero): Lógica do ícone de filme (Olho Vermelho)
+            // ==========================================================
+            const playButton = this.#dom.detailsModalPlayButton;
+
+            // 1. Limpa QUALQUER ícone de "assistido" anterior
+            const oldWatchedIcon = playButton.querySelector('.watched-icon');
+            if (oldWatchedIcon) {
+                oldWatchedIcon.remove();
+            }
+            
+            // 2. Verifica se é filme e se foi assistido
+            if (type === 'movie') {
+                const isWatched = Storage.isEpisodeWatched(id, 'movie');
+                if (isWatched) {
+                    // 3. Adiciona o ícone de "olho vermelho"
+                    const watchedIcon = document.createElement('i');
+                    watchedIcon.setAttribute('data-lucide', 'eye'); // Ícone de olho
+                    watchedIcon.className = 'w-5 h-5 ml-2 text-red-500 watched-icon'; // Cor vermelha
+                    watchedIcon.style.display = 'inline-block';
+                    watchedIcon.style.filter = 'drop-shadow(0 0 5px rgba(0, 0, 0, 0.8))';
+                    
+                    playButton.appendChild(watchedIcon);
+                }
+            }
+            // ==========================================================
+
             this.#dom.detailsModal.classList.remove('hidden');
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
@@ -645,6 +715,20 @@ export class ModalManager {
 
                 if (episode.episode_number === 1) listItem.classList.add('active');
 
+                // ==========================================================
+                // MUDANÇA (Estaca Zero): Verifica se assistiu (Olho Vermelho)
+                // ==========================================================
+                const isWatched = Storage.isEpisodeWatched(
+                    tvId, 
+                    'tv', 
+                    seasonNumber, 
+                    episode.episode_number
+                );
+                const watchedIcon = isWatched 
+                    ? '<i data-lucide="eye" class="w-4 h-4 text-red-500 ml-auto flex-shrink-0 inline-block -translate-y-9"></i>'
+                    : '';
+                // ==========================================================
+
                 const placeholderImg = 'https://placehold.co/120x70/181818/333?text=EP';
                 const imgSrc = episode.still_path ? `${IMG_POSTER_URL}${episode.still_path}` : placeholderImg;
 
@@ -655,10 +739,19 @@ export class ModalManager {
                         <h5 class="text-white text-base font-semibold mb-1">${episode.name || `Episódio ${episode.episode_number}`}</h5>
                         <p class="text-gray-400 text-xs line-clamp-2">${episode.overview || 'Sem descrição.'}</p>
                         <p class="text-gray-500 text-xs mt-1">${episode.runtime ? `${episode.runtime} min` : ''}</p>
-                    </div>`;
+                    </div>
+                    ${watchedIcon}`; // Adiciona o ícone aqui
 
                 listElement.appendChild(listItem);
             });
+            
+            // Recria os ícones Lucide
+            if (window.lucide) {
+                lucide.createIcons({
+                    nodes: listElement.querySelectorAll('[data-lucide]')
+                });
+            }
+            
         } else {
             listElement.innerHTML = '<li class="text-gray-500 p-2">Nenhum episódio encontrado para esta temporada.</li>';
         }
@@ -685,6 +778,16 @@ export class ModalManager {
         this.#dom.detailsModalCast.textContent = 'Carregando...';
         this.#dom.detailsModalGenres.textContent = 'Carregando...';
         this.#dom.detailsModalTags.textContent = 'Carregando...';
+        
+        // ==========================================================
+        // MUDANÇA (Estaca Zero): Limpa o ícone "assistido" do botão
+        // ==========================================================
+        const playButton = this.#dom.detailsModalPlayButton;
+        const oldWatchedIcon = playButton.querySelector('.watched-icon');
+        if (oldWatchedIcon) {
+            oldWatchedIcon.remove();
+        }
+        // ==========================================================
         
         // Informa o app principal para atualizar as fileiras, se necessário
         this.#app.onModalClose();

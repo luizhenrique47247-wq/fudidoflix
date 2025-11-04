@@ -51,6 +51,12 @@ class FudidoFlixApp {
     #currentCountry = null;
     #currentEra = null;
     #currentEraType = null;
+    
+    // ==========================================================
+    // MUDANÇA (Perfil): Ação pendente para o modal
+    // ==========================================================
+    #pendingConfirmationAction = null;
+
 
     // Novo construtor para lidar com a Intro
     constructor() {
@@ -153,6 +159,27 @@ class FudidoFlixApp {
         dom.searchButton.addEventListener('click', () => this.#handleSearchClick());
         dom.searchInput.addEventListener('blur', () => this.#handleSearchBlur());
         dom.searchInput.addEventListener('keypress', (e) => this.#handleSearchKeypress(e));
+
+        // ==========================================================
+        // MUDANÇA (Perfil): Listeners do Perfil
+        // ==========================================================
+        dom.profileButton.addEventListener('click', (e) => this.#handleProfileClick(e));
+        dom.profileClearListButton.addEventListener('click', () => this.#handleClearList());
+        dom.profileClearHistoryButton.addEventListener('click', () => this.#handleClearHistory());
+        dom.profileLogoutButton.addEventListener('click', () => this.#handleLogout());
+
+        // Listener global para fechar o menu de perfil
+        window.addEventListener('click', (e) => this.#handleWindowClickForProfile(e));
+        
+        // ==========================================================
+        // MUDANÇA (Perfil): Listeners do Modal de Confirmação (NOVO)
+        // ==========================================================
+        dom.confirmationModalCancelButton.addEventListener('click', () => this.#handleCancelAction());
+        dom.confirmationModalConfirmButton.addEventListener('click', () => this.#handleConfirmAction());
+        // Fecha se clicar fora do conteúdo
+        dom.confirmationModal.addEventListener('click', (e) => {
+            if (e.target === dom.confirmationModal) this.#handleCancelAction();
+        });
     }
 
     async #initApp() {
@@ -242,7 +269,7 @@ class FudidoFlixApp {
             this.#resetBrowseState();
 
             if (type === 'anime') {
-                this.#currentGenre = '16';
+                this.#currentGenre = '16&with_keywords=210024';
             }
 
             dom.heroSection.classList.add('hidden'); // Esconde o Hero
@@ -431,7 +458,7 @@ class FudidoFlixApp {
         }
 
         if (this.#currentBrowseType === 'anime') {
-            this.#currentGenre = '16';
+            this.#currentGenre = '16&with_keywords=210024';
         }
 
         // Limpa a grade e busca novamente
@@ -537,6 +564,7 @@ class FudidoFlixApp {
         }
     }
 
+
     // ==========================================================
     // MUDANÇA (Refatoração): Lógica de busca movida
     // ==========================================================
@@ -583,6 +611,125 @@ class FudidoFlixApp {
         };
 
         this.#handlePageTransition(() => { pageLogic(); });
+    }
+
+
+    // ========================================================================
+    //  LÓGICA DO MENU DE PERFIL (MODIFICADA)
+    // ========================================================================
+
+    #handleProfileClick(event) {
+        event.stopPropagation(); // Impede que o 'window' click feche o menu imediatamente
+        dom.profileMenu.classList.toggle('hidden');
+        if (window.lucide) {
+            lucide.createIcons({
+                nodes: dom.profileMenu.querySelectorAll('[data-lucide]')
+            });
+        }
+    }
+    
+    #handleWindowClickForProfile(event) {
+        // Se o menu não estiver visível, não faz nada
+        if (dom.profileMenu.classList.contains('hidden')) {
+            return;
+        }
+        
+        // Se o clique foi DENTRO do botão de perfil ou DENTRO do menu, não faz nada
+        if (dom.profileButton.contains(event.target) || dom.profileMenu.contains(event.target)) {
+            return;
+        }
+
+        // Se o clique foi fora, esconde o menu
+        dom.profileMenu.classList.add('hidden');
+    }
+    
+    // --- Lógica do Novo Modal de Confirmação ---
+
+    #showConfirmationModal(title, message, action) {
+        this.#pendingConfirmationAction = action;
+        dom.confirmationModalTitle.textContent = title;
+        dom.confirmationModalMessage.textContent = message;
+        dom.confirmationModal.classList.remove('hidden');
+        
+        // Trava o scroll
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+    }
+
+    #closeConfirmationModal() {
+        this.#pendingConfirmationAction = null;
+        dom.confirmationModal.classList.add('hidden');
+        
+        // Restaura o scroll SOMENTE SE nenhum outro modal principal estiver ativo
+        const isDetailsModalOpen = !dom.detailsModal.classList.contains('hidden');
+        const isPlayerModalOpen = !dom.playerModal.classList.contains('hidden');
+        
+        if (!isDetailsModalOpen && !isPlayerModalOpen) {
+            document.documentElement.style.overflow = 'auto';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    #handleCancelAction() {
+        this.#closeConfirmationModal();
+    }
+
+    #handleConfirmAction() {
+        const action = this.#pendingConfirmationAction;
+        this.#closeConfirmationModal(); // Fecha o modal de confirmação
+        dom.profileMenu.classList.add('hidden'); // Esconde o menu de perfil
+
+        // Executa a ação pendente
+        switch (action) {
+            case 'clearList':
+                Storage.clearMyList();
+                // alert("Minha Lista foi limpa."); // <--- REMOVIDO
+                if (this.#currentBrowseType === 'minha-lista') {
+                    this.#showMinhaListaPage(null);
+                }
+                break;
+            case 'clearHistory':
+                Storage.clearAllHistory();
+                // alert("Seu histórico foi limpo."); // <--- REMOVIDO
+                if (this.#currentBrowseType === 'default') {
+                    this.#fetchAndDisplayRows(categories.default);
+                }
+                break;
+            case 'logout':
+                sessionStorage.removeItem('fudidoFlixAccess');
+                window.location.replace('index.html');
+                break;
+        }
+    }
+
+    // --- Fim da Lógica do Modal ---
+
+
+    #handleClearList() {
+        // Substitui o confirm()
+        this.#showConfirmationModal(
+            'Limpar Minha Lista',
+            'Tem certeza que deseja limpar TODA a sua lista? Esta ação não pode ser desfeita.',
+            'clearList'
+        );
+    }
+
+    #handleClearHistory() {
+        // Substitui o confirm()
+        this.#showConfirmationModal(
+            'Limpar Histórico',
+            'Tem certeza que deseja limpar TODO o seu histórico de visualização? Esta ação não pode ser desfeita.',
+            'clearHistory'
+        );
+    }
+
+    #handleLogout() {
+        // Substitui o confirm()
+        this.#showConfirmationModal(
+            'Deslogar da Sessão',
+            'Tem certeza que deseja sair da sua sessão?',
+            'logout'
+        );
     }
 
 

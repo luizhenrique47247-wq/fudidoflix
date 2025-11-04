@@ -1,5 +1,10 @@
+/* ==========================================================
+   MUDANÇA AQUI (Request 2):
+   Aplica as regras de scroll ao 'html' E 'body'
+   ========================================================== */
+
 /* Define a fonte padrão (Inter) e o fundo principal */
-body {
+html, body {
     background-color: #141414;
     font-family: 'Inter', sans-serif;
     -ms-overflow-style: none;  /* IE e Edge */
@@ -7,6 +12,7 @@ body {
 }
 
 /* Esconde a barra de rolagem do Chrome, Safari e Opera */
+html::-webkit-scrollbar,
 body::-webkit-scrollbar {
     display: none;
 }
@@ -381,4 +387,12 @@ body::-webkit-scrollbar {
 #main-content {
     /* Esta transição deve ter a mesma duração do setTimeout no app.js */
     transition: opacity 0.3s ease-in-out;
+}
+
+/* ==========================================================
+   MUDANÇA (Perfil): Estilo do backdrop de confirmação (NOVO)
+   ========================================================== */
+.confirmation-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
 }

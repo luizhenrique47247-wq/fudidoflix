@@ -52,35 +52,21 @@
 <body class="text-gray-100">
 
     <div id="video-overlay"></div>
-    <video autoplay loop muted playsinline id="video-background">
+
+    <video autoplay loop muted playsinline id="video-background" class="hidden md:block">
         <source src="videologin.mp4" type="video/mp4">
         Seu navegador não suporta vídeos HTML5.
     </video>
 
-    <!-- 
-      Container principal que alinha o conteúdo:
-      - Centralizado em mobile (items-center)
-      - Alinhado à esquerda no desktop (md:items-start) com padding (md:pl-24)
-    -->
-    <div class="min-h-screen flex flex-col justify-center items-center md:items-start p-8 md:pl-24">
+    <div class="min-h-screen flex flex-col justify-center items-center md:items-start p-4 sm:p-8 md:pl-24">
 
-        <!-- --- HEADER ADICIONADO DE VOLTA --- -->
-        <!-- 
-          Usa w-full max-w-sm para ter a mesma largura do formulário abaixo
-          Usa text-center md:text-left para alinhar como o formulário
-        -->
         <header class="w-full max-w-sm mb-10 text-center md:text-left">
-            <h1 class="text-5xl font-extrabold text-red-600">FUDIDOFLIX</h1>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-red-600">FUDIDOFLIX</h1>
         </header>
-        <!-- --- FIM DA ADIÇÃO --- -->
-
         <main id="login-area" class="w-full max-w-sm">
             
-            <!-- 
-              Div transparente que segura o formulário
-            -->
             <div>
-                <h2 class="text-2xl font-bold mb-6 text-white text-center md:text-left">Acesso Restrito</h2>
+                <h2 class="text-xl md:text-2xl font-bold mb-6 text-white text-center md:text-left">Acesso Restrito</h2>
                 
                 <div class="space-y-4">
                     <div>
@@ -102,7 +88,6 @@
         </main>
     </div>
 
-    <!-- O SCRIPT DE LOGIN NÃO MUDA -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
 

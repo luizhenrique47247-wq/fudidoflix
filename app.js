@@ -121,9 +121,8 @@ class FudidoFlixApp {
         sessionStorage.setItem(INTRO_WATCHED_KEY, 'true');
         
         // Restaura o scroll do corpo
-        document.documentElement.style.overflow = 'auto';
-        document.body.style.overflow = 'auto';
-
+        this.#restoreBodyScroll();
+        
         // Faz o fade-in do conteúdo
         dom.mainNav.classList.remove('opacity-0');
         dom.mainContent.classList.remove('opacity-0');
@@ -141,8 +140,8 @@ class FudidoFlixApp {
         // Failsafe: se o vídeo falhar ao carregar, esconde a intro
         dom.introVideo.addEventListener('error', () => this.#hideIntro());
 
-        // Scroll da Navbar
-        window.addEventListener('scroll', this.#handleNavScroll);
+        // Scroll da Navbar e Botão "Voltar ao Topo"
+        window.addEventListener('scroll', () => this.#handleNavScroll());
         // Scroll Infinito (para páginas de browse/busca)
         window.addEventListener('scroll', () => this.#handleInfiniteScroll());
 
@@ -155,13 +154,13 @@ class FudidoFlixApp {
         dom.navMinhaLista.addEventListener('click', (e) => this.#showMinhaListaPage(e));
         dom.navSorte.addEventListener('click', (e) => this.#showSortePage(e));
 
-        // Busca
+        // Busca (agora funciona em mobile e desktop)
         dom.searchButton.addEventListener('click', () => this.#handleSearchClick());
         dom.searchInput.addEventListener('blur', () => this.#handleSearchBlur());
         dom.searchInput.addEventListener('keypress', (e) => this.#handleSearchKeypress(e));
 
         // ==========================================================
-        // MUDANÇA (Perfil): Listeners do Perfil
+        // MUDANÇA (Perfil): Listeners do Perfil (Desktop)
         // ==========================================================
         dom.profileButton.addEventListener('click', (e) => this.#handleProfileClick(e));
         dom.profileClearListButton.addEventListener('click', () => this.#handleClearList());
@@ -180,6 +179,35 @@ class FudidoFlixApp {
         dom.confirmationModal.addEventListener('click', (e) => {
             if (e.target === dom.confirmationModal) this.#handleCancelAction();
         });
+
+        // ==========================================================
+        // MODIFICAÇÃO (Responsividade): Listeners do Menu Hambúrguer
+        // ==========================================================
+        dom.hamburgerButton.addEventListener('click', () => this.#openMobileMenu());
+        dom.mobileMenuCloseButton.addEventListener('click', () => this.#closeMobileMenu());
+        dom.mobileMenuOverlay.addEventListener('click', () => this.#closeMobileMenu());
+        
+        // Listener para os links de navegação <a> dentro do menu mobile
+        dom.mobileNav.addEventListener('click', (e) => this.#handleMobileNavClick(e));
+
+        // MODIFICAÇÃO: Listeners para os botões <button> de perfil dentro do menu mobile
+        // Eles fecham o menu e chamam a função de confirmação
+        dom.mobileClearListButton.addEventListener('click', () => {
+            this.#closeMobileMenu();
+            setTimeout(() => this.#handleClearList(), 310); // Espera a animação
+        });
+        dom.mobileClearHistoryButton.addEventListener('click', () => {
+            this.#closeMobileMenu();
+            setTimeout(() => this.#handleClearHistory(), 310);
+        });
+        dom.mobileLogoutButton.addEventListener('click', () => {
+            this.#closeMobileMenu();
+            setTimeout(() => this.#handleLogout(), 310);
+        });
+
+        
+        // Botão "Voltar ao Topo"
+        dom.backToTopButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     }
 
     async #initApp() {
@@ -190,13 +218,102 @@ class FudidoFlixApp {
     }
 
     #handleNavScroll() {
+        // Lógica da Navbar
         if (window.scrollY > 50) {
             dom.mainNav.classList.add('bg-[#141414]', 'shadow-lg');
         } else {
             dom.mainNav.classList.remove('bg-[#141414]', 'shadow-lg');
         }
+
+        // NOVO: Lógica do Botão "Voltar ao Topo"
+        if (window.scrollY > 400) {
+            dom.backToTopButton.classList.remove('hidden');
+            dom.backToTopButton.classList.add('visible');
+        } else {
+            dom.backToTopButton.classList.remove('visible');
+            // Adiciona um delay para esconder, permitindo a animação de fade-out
+            setTimeout(() => {
+                if (window.scrollY <= 400) { // Verifica novamente
+                    dom.backToTopButton.classList.add('hidden');
+                }
+            }, 300); // Mesmo tempo da transição CSS
+        }
     }
 
+    // ==========================================================
+    // NOVO (Responsividade): Métodos do Menu Hambúrguer
+    // ==========================================================
+    
+    #isModalOpen() {
+        // Verifica se qualquer modal principal está aberto
+        return !dom.detailsModal.classList.contains('hidden') ||
+               !dom.playerModal.classList.contains('hidden') ||
+               !dom.confirmationModal.classList.contains('hidden') ||
+               !dom.introModal.classList.contains('hidden');
+    }
+    
+    #lockBodyScroll() {
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+    }
+
+    #restoreBodyScroll() {
+        // Só restaura o scroll se nenhum outro modal estiver aberto
+        if (!this.#isModalOpen()) {
+            document.documentElement.style.overflow = 'auto';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    #openMobileMenu() {
+        dom.mobileMenuOverlay.classList.remove('hidden');
+        dom.mobileMenuPanel.classList.add('open');
+        this.#lockBodyScroll(); // Trava o scroll do body
+        // Recria ícones lucide dentro do painel
+        if (window.lucide) {
+            lucide.createIcons({
+                nodes: dom.mobileMenuPanel.querySelectorAll('[data-lucide]')
+            });
+        }
+    }
+
+    #closeMobileMenu() {
+        dom.mobileMenuPanel.classList.remove('open');
+        // Adiciona um delay para esconder o overlay, permitindo a animação de saida
+        setTimeout(() => {
+            dom.mobileMenuOverlay.classList.add('hidden');
+        }, 300);
+        this.#restoreBodyScroll(); // Restaura o scroll
+    }
+
+    // ==========================================================
+    // MODIFICAÇÃO: Lógica de clique do menu mobile (só para links <a>)
+    // ==========================================================
+    #handleMobileNavClick(event) {
+        // Esta função agora SÓ lida com cliques em links <a>
+        const link = event.target.closest('a');
+        if (!link) {
+            // Se não for um <a>, é um <button> (Perfil), que é
+            // tratado por seus próprios listeners. Não faz nada aqui.
+            return;
+        }
+
+        event.preventDefault(); // Previne a ação padrão
+
+        // Pega o ID do link mobile (ex: "nav-inicio-mobile")
+        // Remove "-mobile" para achar o ID do link desktop (ex: "nav-inicio")
+        const desktopLinkId = link.id.replace('-mobile', '');
+        const desktopLink = document.getElementById(desktopLinkId);
+        
+        if (desktopLink) {
+            // Simula o clique no link desktop, reutilizando toda a lógica existente
+            desktopLink.click();
+        }
+        
+        // Fecha o menu
+        this.#closeMobileMenu();
+    }
+    
     // ========================================================================
     //  NAVEGAÇÃO E EXIBIÇÃO DE PÁGINAS
     // ========================================================================
@@ -363,6 +480,7 @@ class FudidoFlixApp {
     }
 
     #setActiveNavLink(activeLink) {
+        // Desktop
         dom.mainNavigation.querySelectorAll('a').forEach(link => {
             link.classList.remove('text-[#E50914]');
             if (!link.classList.contains('hover:text-gray-300')) {
@@ -372,6 +490,17 @@ class FudidoFlixApp {
         if (activeLink) {
             activeLink.classList.add('text-[#E50914]');
             activeLink.classList.remove('hover:text-gray-300');
+        }
+
+        // Mobile
+        dom.mobileNav.querySelectorAll('a').forEach(link => {
+             link.classList.remove('text-[#E50914]', 'bg-gray-800');
+        });
+        if (activeLink) {
+             const mobileLink = document.getElementById(activeLink.id + '-mobile');
+             if (mobileLink) {
+                 mobileLink.classList.add('text-[#E50914]', 'bg-gray-800');
+             }
         }
     }
 
@@ -652,22 +781,15 @@ class FudidoFlixApp {
         dom.confirmationModal.classList.remove('hidden');
         
         // Trava o scroll
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
+        this.#lockBodyScroll();
     }
 
     #closeConfirmationModal() {
         this.#pendingConfirmationAction = null;
         dom.confirmationModal.classList.add('hidden');
         
-        // Restaura o scroll SOMENTE SE nenhum outro modal principal estiver ativo
-        const isDetailsModalOpen = !dom.detailsModal.classList.contains('hidden');
-        const isPlayerModalOpen = !dom.playerModal.classList.contains('hidden');
-        
-        if (!isDetailsModalOpen && !isPlayerModalOpen) {
-            document.documentElement.style.overflow = 'auto';
-            document.body.style.overflow = 'auto';
-        }
+        // Restaura o scroll
+        this.#restoreBodyScroll();
     }
 
     #handleCancelAction() {

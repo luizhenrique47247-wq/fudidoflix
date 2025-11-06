@@ -89,4 +89,20 @@ export const dom = {
     introModal: document.getElementById('intro-modal'),
     introVideo: document.getElementById('intro-video'),
     skipIntroButton: document.getElementById('skip-intro-button'),
+
+    // ==========================================================
+    // MODIFICAÇÃO (Responsividade): Menu Hambúrguer e Voltar ao Topo
+    // ==========================================================
+    hamburgerButton: document.getElementById('hamburger-button'),
+    mobileMenuOverlay: document.getElementById('mobile-menu-overlay'),
+    mobileMenuPanel: document.getElementById('mobile-menu-panel'),
+    mobileMenuCloseButton: document.getElementById('mobile-menu-close-button'),
+    mobileNav: document.getElementById('mobile-navigation'),
+    
+    // MODIFICAÇÃO: Botões de perfil mobile (substitui os triggers)
+    mobileClearListButton: document.getElementById('mobile-clear-list-button'),
+    mobileClearHistoryButton: document.getElementById('mobile-clear-history-button'),
+    mobileLogoutButton: document.getElementById('mobile-logout-button'),
+
+    backToTopButton: document.getElementById('back-to-top-button'),
 };

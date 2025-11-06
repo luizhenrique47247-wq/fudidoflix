@@ -65,7 +65,7 @@ body::-webkit-scrollbar {
 }
 
 /* ========================================================
-   CORREÇÃO DO TAMANHO DO PÔSTER
+   CORREÇÃO DO TAMANHO DO PÔSTER (RESPONSIVO)
    ======================================================== */
 
 /* Wrapper individual para cada poster no carrossel (NOVO) */
@@ -73,9 +73,9 @@ body::-webkit-scrollbar {
     display: inline-block; /* Para permitir margin */
     position: relative; /* Contexto para o overlay do título */
     
-    /* FORÇA O MOLDE PADRÃO */
-    width: 180px; 
-    height: 270px;
+    /* FORÇA O MOLDE PADRÃO (Mobile) */
+    width: 140px; 
+    height: 210px;
     
     margin-right: 0.75rem; /* Aumenta o espaçamento horizontal (era 0.5rem) */
     transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Transição movida para cá */
@@ -85,9 +85,26 @@ body::-webkit-scrollbar {
     border-radius: 4px;
 }
 
+/* Tablet (sm) */
+@media (min-width: 640px) {
+    .poster-carousel-wrapper {
+        width: 160px; 
+        height: 240px;
+    }
+}
+
+/* Desktop (lg) */
+@media (min-width: 1024px) {
+    .poster-carousel-wrapper {
+        width: 180px; 
+        height: 270px;
+    }
+}
+
+
 /* Estilização de cada pôster (CARROSSEL) */
 .poster-carousel {
-    /* PREENCHE O MOLDE DE 180x270 */
+    /* PREENCHE O MOLDE (agora responsivo) */
     width: 100%; 
     height: 100%;
     
@@ -136,13 +153,16 @@ body::-webkit-scrollbar {
 }
 
 /* ========================================================
-   ESTILOS DAS SETAS (CORREÇÃO FINAL 100%)
+   ESTILOS DAS SETAS (CORREÇÃO RESPONSIVA)
    ======================================================== */
 
 .carousel-arrow {
     position: absolute;
     top: 1rem;      /* <-- MUDANÇA: Alinha com o padding-top (16px) do container */
-    height: 270px;  /* <-- MUDANÇA: Altura exata do poster (180x270) */
+    
+    /* ALTURA RESPONSIVA (acompanha o poster-carousel-wrapper) */
+    height: 210px;
+    
     width: 4rem; 
     background-color: transparent; 
     color: white;
@@ -152,9 +172,23 @@ body::-webkit-scrollbar {
     cursor: pointer;
     z-index: 20;
     opacity: 0;
-    transition: opacity 0.3s ease; 
+    transition: opacity 0.3s ease, height 0.3s ease; /* Adiciona transição de altura */
     padding: 0;
     pointer-events: auto; /* Garante que a seta seja clicável */
+}
+
+/* Tablet (sm) */
+@media (min-width: 640px) {
+    .carousel-arrow {
+        height: 240px;
+    }
+}
+
+/* Desktop (lg) */
+@media (min-width: 1024px) {
+    .carousel-arrow {
+        height: 270px;
+    }
 }
 
 
@@ -395,4 +429,20 @@ body::-webkit-scrollbar {
 .confirmation-backdrop {
     background-color: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(5px);
+}
+
+/* ==========================================================
+   NOVO (Responsividade): Estilos do Menu Hambúrguer
+   ========================================================== */
+#mobile-menu-panel.open {
+    transform: translateX(0);
+}
+
+/* ==========================================================
+   NOVO (Responsividade): Estilos do Botão Voltar ao Topo
+   ========================================================== */
+#back-to-top-button.visible {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
 }

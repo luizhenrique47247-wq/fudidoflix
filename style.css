@@ -275,6 +275,60 @@ body::-webkit-scrollbar {
     opacity: 1;
 }
 
+/* ==========================================================
+   MUDANÇA (Req 4): Botão de remover da grade (Continuar Assistindo)
+   ========================================================== */
+.poster-grid-remove-button {
+    position: absolute;
+    top: 0.5rem; /* 8px */
+    right: 0.5rem; /* 8px */
+    z-index: 11; /* Acima da imagem, abaixo do hover-scale */
+    
+    background-color: rgba(0, 0, 0, 0.8); /* Mais opaco */
+    color: white;
+    border-radius: 50%;
+    width: 2.25rem; /* 36px - Maior */
+    height: 2.25rem; /* 36px - Maior */
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    border: 2px solid rgba(255, 255, 255, 0.7); /* Borda mais grossa */
+    opacity: 0.8; /* Visível por padrão na página de lista */
+    
+    transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    transform: scale(0.9); /* Um pouco menor, para crescer no hover */
+}
+
+/* Oculta o botão em carrosséis (onde não é usado) */
+.carousel-container .poster-grid-remove-button,
+.poster-grid-wrapper .poster-grid-remove-button {
+    opacity: 0; /* Esconde por padrão */
+    pointer-events: none;
+}
+
+/* Mostra SOMENTE quando o wrapper da grade PAI está sendo "hovered" */
+.poster-grid-wrapper:hover .poster-grid-remove-button {
+    opacity: 1; 
+    pointer-events: auto;
+    transform: scale(1); /* Cresce no hover */
+}
+
+.poster-grid-remove-button:hover {
+    background-color: rgba(229, 9, 20, 0.9); /* Vermelho FudidoFlix */
+    border-color: #fff;
+    transform: scale(1.1); /* Efeito de zoom no botão */
+}
+
+/* Ajusta o ícone 'x' dentro do botão maior */
+.poster-grid-remove-button > i {
+    width: 1.1rem; /* 18px */
+    height: 1.1rem; /* 18px */
+}
+
+
 /* ========================================================================
    OUTROS ESTILOS
    ========================================================================= */
@@ -445,4 +499,87 @@ body::-webkit-scrollbar {
     display: block;
     opacity: 1;
     pointer-events: auto;
+}
+
+/* ==========================================================
+   MUDANÇA (Notificações): Estilos do Badge, Menu e Toast
+   ========================================================== */
+
+/* Ponto vermelho (badge) no sino */
+.notification-badge {
+    position: absolute;
+    top: 0px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background-color: #E50914;
+    border: 2px solid #141414;
+    border-radius: 50%;
+}
+
+/* Item individual na lista de notificações */
+.notification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #333;
+    font-size: 0.875rem;
+    color: #d1d5db; /* text-gray-300 */
+}
+.notification-item:last-child {
+    border-bottom: none;
+}
+.notification-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Link clicável (o texto) */
+.notification-item-link {
+    flex-grow: 1;
+    cursor: pointer;
+    margin-right: 0.5rem; /* 8px */
+}
+.notification-item-link:hover {
+    color: #fff;
+}
+
+/* Cores dos tipos de notificação */
+.notification-item-link strong {
+    font-weight: 600;
+}
+.notification-item-link strong.new-ep {
+    color: #E50914; /* Vermelho */
+}
+.notification-item-link strong.continue {
+    color: #3b82f6; /* Azul */
+}
+.notification-item-link strong.my-list {
+    color: #22c55e; /* Verde */
+}
+
+
+/* Botão 'X' para limpar item */
+.notification-clear-item {
+    flex-shrink: 0;
+    color: #9ca3af; /* text-gray-400 */
+    padding: 2px;
+}
+.notification-clear-item:hover {
+    color: #E50914;
+}
+
+/* Mensagem de lista vazia */
+#notification-list-empty {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280; /* text-gray-500 */
+}
+
+/* Pop-up Toast */
+#notification-toast.visible {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
 }

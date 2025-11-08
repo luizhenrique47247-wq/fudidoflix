@@ -93,3 +93,24 @@ export async function fetchSearchData(query) {
         return null;
     }
 }
+
+
+// ==========================================================
+// MUDANÇA (Notificações): Nova função para buscar detalhes da série
+// ==========================================================
+/**
+ * Busca detalhes completos de uma série (para o 'last_episode_to_air').
+ * @param {string|number} seriesId - O ID da série.
+ * @returns {Promise<object|null>} O objeto de detalhes da série.
+ */
+export async function fetchSeriesDetails(seriesId) {
+    const endpoint = `/tv/${seriesId}`;
+    try {
+        // Não precisamos de 'append_to_response', 
+        // pois 'last_episode_to_air' já vem na busca principal.
+        return await fetchTMDB(endpoint);
+    } catch (error) {
+        console.error(`Erro ao buscar detalhes da série ${seriesId}:`, error);
+        return null;
+    }
+}

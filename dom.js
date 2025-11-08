@@ -105,4 +105,17 @@ export const dom = {
     mobileLogoutButton: document.getElementById('mobile-logout-button'),
 
     backToTopButton: document.getElementById('back-to-top-button'),
+
+    // ==========================================================
+    // MUDANÇA (Notificações): Elementos do Inbox e Toast
+    // ==========================================================
+    notificationButton: document.getElementById('notification-button'),
+    notificationBadge: document.getElementById('notification-badge'),
+    notificationMenu: document.getElementById('notification-menu'),
+    notificationList: document.getElementById('notification-list'),
+    notificationClearAll: document.getElementById('notification-clear-all'),
+
+    notificationToast: document.getElementById('notification-toast'),
+    notificationToastMessage: document.getElementById('notification-toast-message'),
+    notificationToastClose: document.getElementById('notification-toast-close'),
 };

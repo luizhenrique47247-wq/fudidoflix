@@ -287,6 +287,15 @@ export class ModalManager {
                  title: itemData.title || itemData.name,
                  poster_path: itemData.poster_path
              });
+             
+             // ==========================================================
+             // MUDANÇA (Req 2): Remove da "Minha Lista" se estiver lá
+             // ==========================================================
+             if (Storage.isItemInMyList(id, type)) {
+                 Storage.removeFromMyList(id, type);
+             }
+             // ==========================================================
+             
         } else {
              console.warn("[openPlayer] Não foi possível salvar no histórico: itemData não fornecido.");
         }

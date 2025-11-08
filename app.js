@@ -58,6 +58,12 @@ class FudidoFlixApp {
     #pendingConfirmationAction = null;
 
 
+    // ==========================================================
+    // MUDANÇA (Notificações): Estado do Toast
+    // ==========================================================
+    #toastTimeout = null;
+
+
     // Novo construtor para lidar com a Intro
     constructor() {
         document.addEventListener('DOMContentLoaded', () => {
@@ -69,7 +75,10 @@ class FudidoFlixApp {
      * Nova função principal de inicialização
      * Lida com a lógica da intro antes de carregar o app
      */
-    #initializeApp() {
+    // ==========================================================
+    // MUDANÇA (Req 2): Função agora é async
+    // ==========================================================
+    async #initializeApp() {
         // Instancia os gerenciadores
         this.#modalManager = new ModalManager(this, dom);
         this.#uiBuilder = new UIBuilder(this.#modalManager);
@@ -100,6 +109,24 @@ class FudidoFlixApp {
         
         // Carrega o conteúdo principal (Hero, fileiras, etc.)
         this.#initApp();
+
+        // ==========================================================
+        // MUDANÇA (Notificações / Req 2): Lógica de verificação e toast
+        // ==========================================================
+        
+        // 1. Roda a verificação (pode adicionar novos eps ao storage)
+        await this.#runNotificationCheck();
+        
+        // 2. Atualiza a UI do sino com o que já está no storage
+        this.#updateNotificationUI();
+        
+        // 3. Mostra o toast se houver *qualquer* ep novo no storage
+        const inbox = Storage.getInbox();
+        // MUDANÇA: Verifica o inbox.length total, não apenas newEps
+        if (inbox.length > 0) {
+            this.#showNotificationToast(inbox.length);
+        }
+        // ==========================================================
     }
     
     /**
@@ -160,6 +187,15 @@ class FudidoFlixApp {
         dom.searchInput.addEventListener('keypress', (e) => this.#handleSearchKeypress(e));
 
         // ==========================================================
+        // MUDANÇA (Notificações): Listeners do Sino e Toast
+        // ==========================================================
+        dom.notificationButton.addEventListener('click', (e) => this.#handleNotificationClick(e));
+        dom.notificationMenu.addEventListener('click', (e) => this.#handleNotificationItemClick(e));
+        dom.notificationClearAll.addEventListener('click', () => this.#handleClearAllNotifications());
+        dom.notificationToastClose.addEventListener('click', () => this.#hideNotificationToast());
+
+
+        // ==========================================================
         // MUDANÇA (Perfil): Listeners do Perfil (Desktop)
         // ==========================================================
         dom.profileButton.addEventListener('click', (e) => this.#handleProfileClick(e));
@@ -168,7 +204,7 @@ class FudidoFlixApp {
         dom.profileLogoutButton.addEventListener('click', () => this.#handleLogout());
 
         // Listener global para fechar o menu de perfil
-        window.addEventListener('click', (e) => this.#handleWindowClickForProfile(e));
+        window.addEventListener('click', (e) => this.#handleWindowClickForMenus(e));
         
         // ==========================================================
         // MUDANÇA (Perfil): Listeners do Modal de Confirmação (NOVO)
@@ -420,6 +456,9 @@ class FudidoFlixApp {
         this.#handlePageTransition(pageLogic);
     }
 
+    // ==========================================================
+    // MUDANÇA (Minha Lista / Continuar Assistindo): Página reescrita
+    // ==========================================================
     #showMinhaListaPage(event) {
         if (event) event.preventDefault();
 
@@ -431,36 +470,92 @@ class FudidoFlixApp {
             this.#setActiveNavLink(dom.navMinhaLista);
             
             const myList = Storage.getMyList();
+            // MUDANÇA (Req 1/3): Usa a *nova* lista
+            const historyList = Storage.getContinueWatchingList();
 
-            const titleEl = document.createElement('h2');
-            titleEl.className = 'text-3xl font-bold pt-24';
-            titleEl.textContent = `Minha Lista`;
-            dom.contentRowsContainer.appendChild(titleEl);
+            // --- Cria a estrutura principal da grade (2 colunas em telas grandes) ---
+            const mainContainer = document.createElement('div');
+            mainContainer.className = 'pt-24 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16';
+            
+            // --- Coluna da Esquerda: Minha Lista ---
+            const myListContainer = document.createElement('div');
+            
+            const myListTitle = document.createElement('h2');
+            myListTitle.className = 'text-3xl font-bold mb-6';
+            myListTitle.textContent = 'Minha Lista';
+            myListContainer.appendChild(myListTitle);
 
             if (myList.length === 0) {
-                dom.contentRowsContainer.innerHTML += `
-                    <p class="text-gray-400 mt-4">Você ainda não adicionou nenhum título à sua lista.</p>
-                `;
-                return;
+                myListContainer.innerHTML += `<p class="text-gray-400 mt-4">Sua lista está vazia. Adicione filmes e séries para vê-los aqui.</p>`;
+            } else {
+                const myListGrid = document.createElement('div');
+                // Grid responsivo com 3 colunas em 'sm' e 'md' (ocupa meia tela no 'lg')
+                myListGrid.className = 'grid grid-cols-2 sm:grid-cols-3 gap-4';
+                
+                myList.forEach(item => {
+                    if (item.poster_path) {
+                        const gridItem = this.#uiBuilder.buildGridItem(item, item.type || 'movie');
+                        myListGrid.appendChild(gridItem);
+                    }
+                });
+                myListContainer.appendChild(myListGrid);
+            }
+            
+            // --- Coluna da Direita: Continuar Assistindo ---
+            const historyContainer = document.createElement('div');
+            
+            const historyTitle = document.createElement('h2');
+            historyTitle.className = 'text-3xl font-bold mb-6';
+            historyTitle.textContent = 'Continuar Assistindo';
+            historyContainer.appendChild(historyTitle);
+
+            if (historyList.length === 0) {
+                historyContainer.innerHTML += `<p class="text-gray-400 mt-4">Você ainda não assistiu nada. Seu histórico aparecerá aqui.</p>`;
+            } else {
+                const historyGrid = document.createElement('div');
+                // Grid responsivo com 3 colunas em 'sm' e 'md' (ocupa meia tela no 'lg')
+                historyGrid.className = 'grid grid-cols-2 sm:grid-cols-3 gap-4';
+                
+                historyList.forEach(item => {
+                    if (item.poster_path) {
+                        // MUDANÇA (Req 3): Passa 'showRemoveButton: true'
+                        const gridItem = this.#uiBuilder.buildGridItem(item, item.type || 'movie', { showRemoveButton: true });
+                        historyGrid.appendChild(gridItem);
+                    }
+                });
+                historyContainer.appendChild(historyGrid);
+
+                // MUDANÇA (Req 2): Adiciona listener para os botões de remover
+                historyGrid.addEventListener('click', (e) => {
+                    const removeButton = e.target.closest('.poster-grid-remove-button');
+                    if (removeButton) {
+                        e.stopPropagation(); // Impede que o modal de detalhes abra
+                        const id = Number(removeButton.dataset.id);
+                        const title = removeButton.dataset.title || 'este item';
+                        
+                        // Chama o modal de confirmação
+                        this.#showConfirmationModal(
+                            'Remover Título', 
+                            `Deseja remover "${title}" da sua lista "Continuar Assistindo"?`, 
+                            { action: 'removeFromContinue', id: id } // Passa um objeto de ação
+                        );
+                    }
+                });
             }
 
-            const gridContainer = document.createElement('div');
-            gridContainer.id = 'my-list-grid';
-            gridContainer.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-8';
-
-            myList.forEach(item => {
-                if (item.poster_path) {
-                    const gridItem = this.#uiBuilder.buildGridItem(item, 'movie');
-                    gridContainer.appendChild(gridItem);
-                }
-            });
-
-            dom.contentRowsContainer.appendChild(gridContainer);
+            // --- Adiciona as colunas ao container principal ---
+            mainContainer.appendChild(myListContainer);
+            mainContainer.appendChild(historyContainer);
+            dom.contentRowsContainer.appendChild(mainContainer);
+            
             if (window.lucide) { lucide.createIcons(); }
         };
 
         this.#handlePageTransition(pageLogic);
     }
+    
+    // MÉTODO REMOVIDO (não é mais chamado, a lógica está no confirm)
+    // #handleRemoveFromHistory(id) { ... }
 
     #showSortePage(event) {
         if (event) event.preventDefault();
@@ -534,6 +629,7 @@ class FudidoFlixApp {
             let items = [];
 
             if (category.endpoint === 'localstorage' && category.title === "Últimos Assistidos") {
+                // MUDANÇA (Req 1/3): "Últimos Assistidos" lê do histórico principal
                 items = Storage.getWatchedHistory(); // Busca do Storage
                 if (items.length === 0) {
                      continue;
@@ -750,6 +846,7 @@ class FudidoFlixApp {
     #handleProfileClick(event) {
         event.stopPropagation(); // Impede que o 'window' click feche o menu imediatamente
         dom.profileMenu.classList.toggle('hidden');
+        dom.notificationMenu.classList.add('hidden'); // Esconde o sino
         if (window.lucide) {
             lucide.createIcons({
                 nodes: dom.profileMenu.querySelectorAll('[data-lucide]')
@@ -757,19 +854,23 @@ class FudidoFlixApp {
         }
     }
     
-    #handleWindowClickForProfile(event) {
-        // Se o menu não estiver visível, não faz nada
-        if (dom.profileMenu.classList.contains('hidden')) {
-            return;
+    // ==========================================================
+    // MUDANÇA (Notificações): Atualiza o fechamento de menus
+    // ==========================================================
+    #handleWindowClickForMenus(event) {
+        // Se o menu de perfil não estiver visível, não faz nada
+        if (!dom.profileMenu.classList.contains('hidden')) {
+             if (!dom.profileButton.contains(event.target) && !dom.profileMenu.contains(event.target)) {
+                 dom.profileMenu.classList.add('hidden');
+             }
         }
         
-        // Se o clique foi DENTRO do botão de perfil ou DENTRO do menu, não faz nada
-        if (dom.profileButton.contains(event.target) || dom.profileMenu.contains(event.target)) {
-            return;
+        // Se o menu de notificação não estiver visível, não faz nada
+        if (!dom.notificationMenu.classList.contains('hidden')) {
+             if (!dom.notificationButton.contains(event.target) && !dom.notificationMenu.contains(event.target)) {
+                 dom.notificationMenu.classList.add('hidden');
+             }
         }
-
-        // Se o clique foi fora, esconde o menu
-        dom.profileMenu.classList.add('hidden');
     }
     
     // --- Lógica do Novo Modal de Confirmação ---
@@ -796,30 +897,56 @@ class FudidoFlixApp {
         this.#closeConfirmationModal();
     }
 
+    // ==========================================================
+    // MUDANÇA (Req 2): #handleConfirmAction agora lida com OBJETOS
+    // ==========================================================
     #handleConfirmAction() {
-        const action = this.#pendingConfirmationAction;
+        const actionPayload = this.#pendingConfirmationAction;
         this.#closeConfirmationModal(); // Fecha o modal de confirmação
         dom.profileMenu.classList.add('hidden'); // Esconde o menu de perfil
 
+        let actionType;
+        let actionData = null;
+
+        // Verifica se a ação é um string (antigo) ou um objeto (novo)
+        if (typeof actionPayload === 'string') {
+            actionType = actionPayload;
+        } else if (typeof actionPayload === 'object' && actionPayload !== null) {
+            actionType = actionPayload.action;
+            actionData = actionPayload;
+        } else {
+            return; // Nenhuma ação válida
+        }
+
         // Executa a ação pendente
-        switch (action) {
+        switch (actionType) {
             case 'clearList':
                 Storage.clearMyList();
-                // alert("Minha Lista foi limpa."); // <--- REMOVIDO
                 if (this.#currentBrowseType === 'minha-lista') {
                     this.#showMinhaListaPage(null);
                 }
                 break;
             case 'clearHistory':
                 Storage.clearAllHistory();
-                // alert("Seu histórico foi limpo."); // <--- REMOVIDO
                 if (this.#currentBrowseType === 'default') {
                     this.#fetchAndDisplayRows(categories.default);
+                }
+                if (this.#currentBrowseType === 'minha-lista') {
+                    this.#showMinhaListaPage(null);
                 }
                 break;
             case 'logout':
                 sessionStorage.removeItem('fudidoFlixAccess');
                 window.location.replace('index.html');
+                break;
+            // MUDANÇA (Req 2/3): Novo case para remover de "Continuar Assistindo"
+            case 'removeFromContinue':
+                if (actionData && actionData.id) {
+                    Storage.removeFromContinueWatching(actionData.id); // Chama a nova função
+                    if (this.#currentBrowseType === 'minha-lista') {
+                        this.#showMinhaListaPage(null); // Re-renderiza a página
+                    }
+                }
                 break;
         }
     }
@@ -840,7 +967,7 @@ class FudidoFlixApp {
         // Substitui o confirm()
         this.#showConfirmationModal(
             'Limpar Histórico',
-            'Tem certeza que deseja limpar TODO o seu histórico de visualização? Esta ação não pode ser desfeita.',
+            'Tem certeza que deseja limpar TODO o seu histórico de visualização? (Isso inclui "Últimos Assistidos" e "Continuar Assistindo").',
             'clearHistory'
         );
     }
@@ -852,6 +979,325 @@ class FudidoFlixApp {
             'Tem certeza que deseja sair da sua sessão?',
             'logout'
         );
+    }
+
+    // ==========================================================
+    // MUDANÇA (Notificações): Lógica do Inbox e Toast
+    // ==========================================================
+
+    /**
+     * Verifica se há novos episódios para as séries em "Minha Lista".
+     * Roda 1x por sessão (ou a cada 4 horas).
+     */
+    async #runNotificationCheck() {
+        const lastCheck = Storage.getLastCheck();
+        const now = new Date();
+
+        // Se não houver 'lastCheck', define um de 4 horas atrás para não
+        // notificar tudo na primeira vez.
+        if (!lastCheck) {
+            const fourHoursAgo = new Date(now.getTime() - (4 * 60 * 60 * 1000));
+            Storage.setLastCheck(fourHoursAgo.toISOString());
+            console.log("Definindo 'lastCheck' inicial.");
+            return;
+        }
+
+        const lastCheckDate = new Date(lastCheck);
+        const hoursDiff = (now.getTime() - lastCheckDate.getTime()) / (1000 * 60 * 60);
+
+        // Limite: Só verifica a cada 4 horas
+        if (hoursDiff < 4) {
+            console.log("Verificação de notificações pulada (menos de 4h).");
+            return;
+        }
+
+        console.log("Iniciando verificação de novas notificações...");
+        
+        let newNotificationsFound = [];
+
+        // --- 1. Limpa notificações de lembrete antigas ---
+        let currentInbox = Storage.getInbox();
+        let newEps = currentInbox.filter(item => item.type === 'new_ep');
+        // Sobrescreve o inbox SÓ com os eps novos (limpando lembretes)
+        localStorage.setItem('fudidoFlixInbox', JSON.stringify(newEps));
+
+        // --- 2. Verifica NOVOS EPISÓDIOS (lógica original) ---
+        const myList = Storage.getMyList();
+        const seriesToWatch = myList.filter(item => item.type === 'tv' || item.media_type === 'tv');
+        
+        if (seriesToWatch.length > 0) {
+            for (const series of seriesToWatch) {
+                const details = await Content.fetchSeriesDetails(series.id);
+                
+                if (details && details.last_episode_to_air && details.last_episode_to_air.air_date) {
+                    const lastEpDate = new Date(details.last_episode_to_air.air_date);
+
+                    if (lastEpDate > lastCheckDate) {
+                        const ep = details.last_episode_to_air;
+                        const notification = {
+                            type: 'new_ep', // Tipo
+                            seriesId: details.id,
+                            seriesName: details.name,
+                            season: ep.season_number,
+                            episode: ep.episode_number,
+                            uniqueId: `${details.id}-S${ep.season_number}-E${ep.episode_number}`
+                        };
+                        
+                        Storage.saveToInbox(notification);
+                        newNotificationsFound.push(notification);
+                    }
+                }
+            }
+        }
+        
+        // --- 3. Adiciona Lembrete de "Continuar Assistindo" ---
+        // MUDANÇA (Req 1/3): Lê da nova lista
+        const continueList = Storage.getContinueWatchingList();
+        const watchedEpisodes = Storage.getWatchedEpisodes();
+        const tvHistory = continueList.filter(h => h.type === 'tv' || h.media_type === 'tv');
+
+        if (tvHistory.length > 0) {
+            const lastWatchedSeries = tvHistory[0]; // Pega a série mais recente
+            const lastEp = watchedEpisodes.find(ep => ep.id === lastWatchedSeries.id); // Pega o último ep assistido
+
+            if(lastEp) {
+                const notification = {
+                    type: 'continue_watching',
+                    seriesId: lastWatchedSeries.id,
+                    seriesName: lastWatchedSeries.title,
+                    season: lastEp.season,
+                    episode: lastEp.episode + 1, // Sugere o *próximo*
+                    uniqueId: `continue-${lastWatchedSeries.id}` // ID único de lembrete
+                };
+                Storage.saveToInbox(notification);
+                // Não adiciona ao 'newNotificationsFound' para o toast não contar
+            }
+        }
+        
+        // --- 4. Adiciona Lembrete de "Minha Lista" ---
+        if (myList.length > 0) {
+            const randomItem = myList[Math.floor(Math.random() * myList.length)];
+            const notification = {
+                type: 'my_list_reminder',
+                seriesId: randomItem.id, // Usamos 'seriesId' e 'seriesName' para consistência
+                seriesName: randomItem.title || randomItem.name,
+                itemType: randomItem.type || randomItem.media_type,
+                uniqueId: `reminder-${randomItem.id}` // ID único de lembrete
+            };
+            Storage.saveToInbox(notification);
+            // Não adiciona ao 'newNotificationsFound'
+        }
+
+        // --- 5. Finaliza ---
+        Storage.setLastCheck(); // Marca a verificação como concluída
+
+        if (newNotificationsFound.length > 0) {
+            console.log(`Novas notificações encontradas: ${newNotificationsFound.length}`);
+            // MUDANÇA (Req 2): Toast foi movido para #initializeApp
+            // this.#showNotificationToast(newNotificationsFound.length);
+        } else {
+            console.log("Nenhuma notificação nova (de episódio) encontrada.");
+        }
+
+        // MUDANÇA (Req 2): Atualização da UI movida para #initializeApp
+        // this.#updateNotificationUI();
+    }
+
+    /**
+     * Mostra ou esconde o menu de notificações (sino).
+     */
+    #handleNotificationClick(event) {
+        event.stopPropagation();
+        dom.notificationMenu.classList.toggle('hidden');
+        dom.profileMenu.classList.add('hidden'); // Esconde o perfil
+        
+        // Recria ícones se estiver abrindo
+        if (!dom.notificationMenu.classList.contains('hidden')) {
+            if (window.lucide) {
+                lucide.createIcons({
+                    nodes: dom.notificationMenu.querySelectorAll('[data-lucide]')
+                });
+            }
+        }
+    }
+
+    /**
+     * Lida com cliques dentro do menu de notificações (delegação).
+     */
+    #handleNotificationItemClick(event) {
+        const clearButton = event.target.closest('.notification-clear-item');
+        const link = event.target.closest('.notification-item-link');
+
+        if (clearButton) {
+            event.stopPropagation(); // Impede que o link seja clicado
+            const uniqueId = clearButton.dataset.uid;
+            Storage.removeFromInbox(uniqueId);
+            this.#updateNotificationUI(); // Re-renderiza a lista
+            return;
+        }
+        
+        if (link) {
+            event.preventDefault();
+            const seriesId = link.dataset.id;
+            const itemType = link.dataset.type || 'tv'; // Pega o tipo (padrão 'tv')
+
+            // ==========================================================
+            // MUDANÇA (Req 1): Remove a notificação ao clicar
+            // ==========================================================
+            const parentLi = link.closest('.notification-item');
+            if (parentLi) {
+                const btn = parentLi.querySelector('.notification-clear-item');
+                if (btn) {
+                    const uniqueId = btn.dataset.uid;
+                    Storage.removeFromInbox(uniqueId);
+                    this.#updateNotificationUI(); // Re-renderiza imediatamente
+                }
+            }
+            // ==========================================================
+
+            this.publicOpenDetailsModal(seriesId, itemType);
+            dom.notificationMenu.classList.add('hidden'); // Fecha o menu
+            return;
+        }
+    }
+
+    /**
+     * Limpa todas as notificações do Inbox.
+     */
+    #handleClearAllNotifications() {
+        Storage.clearInbox();
+        this.#updateNotificationUI(); // Re-renderiza a lista (que ficará vazia)
+    }
+    
+    /**
+     * Lê o Storage e atualiza a UI do sino (badge e lista).
+     */
+    #updateNotificationUI() {
+        const inbox = Storage.getInbox();
+        
+        // ==========================================================
+        // MUDANÇA (Ajuste Fino): Badge conta TUDO
+        // ==========================================================
+        if (inbox.length > 0) {
+            dom.notificationBadge.classList.remove('hidden');
+        } else {
+            dom.notificationBadge.classList.add('hidden');
+        }
+        // ==========================================================
+
+        // 2. Atualiza a Lista
+        dom.notificationList.innerHTML = ''; // Limpa
+        
+        if (inbox.length === 0) {
+            dom.notificationList.innerHTML = `
+                <li id="notification-list-empty">Você está em dia!</li>
+            `;
+            return;
+        }
+
+        // MUDANÇA (Req 2): Mapeia prioridades e ordena o inbox
+        const priority = { 'new_ep': 1, 'continue_watching': 2, 'my_list_reminder': 3 };
+        const sortedInbox = inbox.sort((a, b) => {
+            const priorityA = priority[a.type] || 99;
+            const priorityB = priority[b.type] || 99;
+            return priorityA - priorityB;
+        });
+
+        sortedInbox.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'notification-item';
+            
+            let html = '';
+            
+            switch (item.type) {
+                case 'new_ep':
+                    // MUDANÇA (Req 1): Remove S/E
+                    html = `
+                        <a href="#" class="notification-item-link" data-id="${item.seriesId}" data-type="tv">
+                            <strong class="new-ep">Novo Ep:</strong> ${item.seriesName}
+                        </a>`;
+                    break;
+                case 'continue_watching':
+                    // MUDANÇA (Req 1): Remove S/E
+                     html = `
+                        <a href="#" class="notification-item-link" data-id="${item.seriesId}" data-type="tv">
+                            <strong class="continue">Continue:</strong> ${item.seriesName}
+                        </a>`;
+                    break;
+                case 'my_list_reminder':
+                     html = `
+                        <a href="#" class="notification-item-link" data-id="${item.seriesId}" data-type="${item.itemType}">
+                            <strong class="my-list">Da sua lista:</strong> ${item.seriesName}
+                        </a>`;
+                    break;
+                default:
+                    return; // Pula item desconhecido
+            }
+            
+            html += `
+                <button class="notification-clear-item" data-uid="${item.uniqueId}" aria-label="Limpar notificação">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>`;
+                
+            li.innerHTML = html;
+            dom.notificationList.appendChild(li);
+        });
+        
+        // Recria ícones (apenas para os 'X' se o menu estiver visível)
+        if (!dom.notificationMenu.classList.contains('hidden')) {
+             if (window.lucide) {
+                lucide.createIcons({
+                    nodes: dom.notificationList.querySelectorAll('[data-lucide]')
+                });
+            }
+        }
+    }
+
+    /**
+     * Mostra o pop-up (toast) de notificação.
+     * @param {number} count - O número de novidades.
+     */
+    #showNotificationToast(count) {
+        if (this.#toastTimeout) clearTimeout(this.#toastTimeout);
+
+        // ==========================================================
+        // MUDANÇA (Ajuste Fino): Mensagem genérica
+        // ==========================================================
+        const message = (count === 1) 
+            ? `Você tem 1 novidade! Confira no sino.`
+            : `Você tem ${count} novidades! Confira no sino.`;
+        // ==========================================================
+        
+        dom.notificationToastMessage.textContent = message;
+        dom.notificationToast.classList.remove('hidden');
+        
+        // Força o navegador a aplicar a classe 'hidden' antes de 'visible'
+        setTimeout(() => {
+            dom.notificationToast.classList.add('visible');
+            if (window.lucide) {
+                lucide.createIcons({
+                    nodes: dom.notificationToast.querySelectorAll('[data-lucide]')
+                });
+            }
+        }, 10); // Pequeno delay
+
+        // Esconde automaticamente após 5 segundos
+        this.#toastTimeout = setTimeout(() => {
+            this.#hideNotificationToast();
+        }, 5000);
+    }
+
+    /**
+     * Esconde o pop-up (toast) de notificação.
+     */
+    #hideNotificationToast() {
+        if (this.#toastTimeout) clearTimeout(this.#toastTimeout);
+        
+        dom.notificationToast.classList.remove('visible');
+        // Adiciona um delay para esconder, permitindo a animação de fade-out
+        setTimeout(() => {
+            dom.notificationToast.classList.add('hidden');
+        }, 300); // Mesmo tempo da transição CSS
     }
 
 
@@ -874,6 +1320,10 @@ class FudidoFlixApp {
     onPlayerClose() {
         if (this.#currentBrowseType === 'default') {
             this.#fetchAndDisplayRows(categories.default);
+        }
+        // MUDANÇA: Atualiza a pág "Minha Lista" se estiver nela
+        if (this.#currentBrowseType === 'minha-lista') {
+            this.#showMinhaListaPage(null);
         }
     }
 

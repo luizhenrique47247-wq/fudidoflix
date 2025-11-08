@@ -136,9 +136,10 @@ export class UIBuilder {
      * Constrói um único item da grade (poster).
      * @param {object} item - O item (filme/série).
      * @param {string} typeForEndpoint - O tipo ('movie' ou 'tv') para fallback.
+     * @param {object} [options={}] - Opções adicionais, como { showRemoveButton: true }.
      * @returns {HTMLElement} O elemento poster-grid-wrapper pronto.
      */
-    buildGridItem(item, typeForEndpoint = 'movie') {
+    buildGridItem(item, typeForEndpoint = 'movie', options = {}) {
         const type = item.media_type || item.type || typeForEndpoint;
 
         // 1. Criar o Wrapper
@@ -158,13 +159,43 @@ export class UIBuilder {
         titleOverlay.textContent = item.title || item.name || '';
         
         // 4. Mover o listener para o Wrapper
-        wrapper.addEventListener('click', () => {
+        // ==========================================================
+        // MUDANÇA (Req 1): Adiciona verificação no listener
+        // ==========================================================
+        wrapper.addEventListener('click', (e) => {
+            // Se o alvo do clique (ou seu pai) for o botão de remover,
+            // não faça nada. Deixe o 'app.js' lidar com isso.
+            if (e.target.closest('.poster-grid-remove-button')) {
+                return;
+            }
+            // Caso contrário, abra o modal de detalhes.
             this.#modalManager.openDetailsModal(item.id, type);
         });
+        // ==========================================================
 
         // 5. Montar
         wrapper.appendChild(img);
         wrapper.appendChild(titleOverlay);
+        
+        // ==========================================================
+        // MUDANÇA (Req 2): Adiciona o botão de remover se solicitado
+        // ==========================================================
+        if (options.showRemoveButton) {
+            const removeButton = document.createElement('button');
+            removeButton.className = 'poster-grid-remove-button'; // Estilo definido no style.css
+            removeButton.innerHTML = `<i data-lucide="x" class="w-4 h-4"></i>`;
+            removeButton.dataset.id = item.id;
+            removeButton.dataset.type = type;
+            // MUDANÇA (Req 2): Adiciona o título para o modal de confirmação
+            removeButton.dataset.title = item.title || item.name;
+            removeButton.setAttribute('aria-label', 'Remover do histórico');
+            
+            // O listener de clique será adicionado no app.js (delegação)
+            
+            wrapper.appendChild(removeButton);
+        }
+        // ==========================================================
+        
         return wrapper;
     }
 

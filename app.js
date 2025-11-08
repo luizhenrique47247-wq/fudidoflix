@@ -1315,6 +1315,137 @@ class FudidoFlixApp {
     publicOpenDetailsModal(id, type) {
         this.#modalManager.openDetailsModal(id, type);
     }
+    
+    // ==========================================================
+    // MUDANÇA (Elenco/Gênero): Novas funções públicas
+    // ==========================================================
+
+    /**
+     * Navega para uma página de grade filtrada por gênero.
+     * @param {string} genreId 
+     * @param {string} genreName 
+     * @param {string} type 'movie' ou 'tv'
+     */
+    publicShowBrowsePageForGenre(genreId, genreName, type) {
+        const pageLogic = () => {
+            this.#currentBrowseType = type; // 'movie' ou 'tv'
+            this.#resetBrowseState();
+            this.#currentGenre = genreId; // Define o filtro de gênero
+
+            dom.heroSection.classList.add('hidden');
+            dom.contentRowsContainer.innerHTML = '';
+
+            const title = (type === 'movie' ? 'Filmes de ' : 'Séries de ') + genreName;
+            
+            // MUDANÇA (Req 2): Adiciona o botão "Voltar"
+            dom.contentRowsContainer.innerHTML = `
+                <div class="pt-24">
+                    <button id="grid-back-button" class="flex items-center space-x-2 text-gray-300 hover:text-white mb-6">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        <span>Voltar</span>
+                    </button>
+                </div>
+            `;
+            // Adiciona o listener
+            dom.contentRowsContainer.querySelector('#grid-back-button').addEventListener('click', () => this.#handleLogoClick(null));
+
+            const headerElement = this.#uiBuilder.buildBrowseHeader(
+                title, 
+                type, 
+                () => this.#handleFilterChange()
+            );
+            // Remove o 'pt-24' do header, pois o container pai já o tem
+            headerElement.classList.remove('pt-24');
+            dom.contentRowsContainer.querySelector('.pt-24').appendChild(headerElement);
+
+            const gridContainer = document.createElement('div');
+            gridContainer.id = 'browse-grid';
+            gridContainer.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-8';
+            dom.contentRowsContainer.querySelector('.pt-24').appendChild(gridContainer);
+            
+            if (window.lucide) { lucide.createIcons(); }
+
+            this.#fetchAndDisplayGrid(); // Esta função já usa this.#currentGenre
+
+            this.#setActiveNavLink(null); // Nenhum link da nav principal fica ativo
+        };
+
+        this.#handlePageTransition(pageLogic);
+    }
+
+    /**
+     * Navega para uma página de grade com a filmografia de um ator.
+     * @param {string} actorId 
+     * @param {string} actorName 
+     */
+    publicShowBrowsePageForActor(actorId, actorName) {
+        const pageLogic = async () => {
+            this.#currentBrowseType = 'search'; // Trata como uma busca
+            this.#resetBrowseState();
+            dom.heroSection.classList.add('hidden');
+            // MUDANÇA (Req 2): Adiciona o botão "Voltar" e o container
+            dom.contentRowsContainer.innerHTML = `
+                <div class="pt-24">
+                    <button id="grid-back-button" class="flex items-center space-x-2 text-gray-300 hover:text-white mb-6">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        <span>Voltar</span>
+                    </button>
+                    <h2 class="text-3xl font-bold mb-8">Filmografia de ${actorName}</h2>
+                    <p id="grid-loading" class="text-gray-400 text-lg">Buscando...</p>
+                    <div id="search-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-8"></div>
+                </div>
+            `;
+            // Adiciona o listener
+            dom.contentRowsContainer.querySelector('#grid-back-button').addEventListener('click', () => this.#handleLogoClick(null));
+            if (window.lucide) { lucide.createIcons(); }
+            
+            this.#setActiveNavLink(null);
+
+            // 1. Busca
+            // MUDANÇA (Req 1): Usa a nova função de busca correta
+            const data = await Content.fetchActorCredits(actorId);
+            const gridContainer = dom.contentRowsContainer.querySelector('#search-grid');
+            const loadingText = dom.contentRowsContainer.querySelector('#grid-loading');
+
+            // 2. Constrói
+            if (data && (data.movieCredits || data.tvCredits)) {
+                
+                // MUDANÇA (Req 1): Lógica de combinação de créditos (de sorte.js)
+                const movieCast = (data.movieCredits.cast || []).map(m => ({...m, media_type: 'movie'}));
+                const movieCrew = (data.movieCredits.crew || []).map(m => ({...m, media_type: 'movie'}));
+                // CORREÇÃO (Bug): A linha abaixo estava errada
+                const tvCast = (data.tvCredits.cast || []).map(t => ({...t, media_type: 'tv'}));
+                const tvCrew = (data.tvCredits.crew || []).map(t => ({...t, media_type: 'tv'}));
+
+                const allCredits = [...movieCast, ...movieCrew, ...tvCast, ...tvCrew];
+                const uniqueCredits = [...new Map(allCredits.map(item => [item['id'], item])).values()];
+                
+                const validResults = uniqueCredits
+                    .filter(item => item.poster_path)
+                    .sort((a, b) => b.popularity - a.popularity);
+                // Fim da lógica de combinação
+
+                if (validResults.length > 0) {
+                    loadingText.classList.add('hidden'); // Esconde "Buscando..."
+
+                    validResults.forEach(item => {
+                        const gridItem = this.#uiBuilder.buildGridItem(item, item.media_type || 'movie');
+                        gridContainer.appendChild(gridItem);
+                    });
+                    
+                    if (window.lucide) { lucide.createIcons(); }
+                } else {
+                    loadingText.textContent = `Nenhum filme ou série encontrado para ${actorName}.`;
+                }
+            } else {
+                loadingText.textContent = 'Nenhum resultado encontrado.';
+            }
+        };
+
+        this.#handlePageTransition(pageLogic);
+    }
+
+    // ==========================================================
 
     /**
      * Callback para o ModalManager informar o app que o player fechou.

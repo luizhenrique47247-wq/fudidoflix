@@ -94,6 +94,33 @@ export async function fetchSearchData(query) {
     }
 }
 
+// ==========================================================
+// MUDANÇA (Elenco/Gênero): Função removida (estava incorreta)
+// ==========================================================
+// export async function fetchGridDataByActor(actorId) { ... }
+
+
+// ==========================================================
+// MUDANÇA (Elenco/Gênero): Nova função (correta) para buscar créditos
+// ==========================================================
+/**
+ * Busca os créditos de filmes e TV de um ator.
+ * @param {string|number} actorId - O ID do ator.
+ * @returns {Promise<object|null>} Um objeto com { movieCredits, tvCredits }.
+ */
+export async function fetchActorCredits(actorId) {
+    try {
+        const [movieData, tvData] = await Promise.all([
+            fetchTMDB(`/person/${actorId}/movie_credits`),
+            fetchTMDB(`/person/${actorId}/tv_credits`)
+        ]);
+        return { movieCredits: movieData, tvCredits: tvData };
+    } catch (error) {
+        console.error(`Erro ao buscar créditos do ator ${actorId}:`, error);
+        return null;
+    }
+}
+
 
 // ==========================================================
 // MUDANÇA (Notificações): Nova função para buscar detalhes da série

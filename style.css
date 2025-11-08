@@ -602,3 +602,18 @@ body::-webkit-scrollbar {
         max-width: calc(100vw - 2rem); 
     }
 }
+
+/* ==========================================================
+   MUDANÇA (Elenco/Gênero Clicável): Estilos
+   ========================================================== */
+.clickable-genre,
+.clickable-actor {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.clickable-genre:hover,
+.clickable-actor:hover {
+    color: #fff; /* Fica branco ao passar o mouse */
+    text-decoration: underline;
+}

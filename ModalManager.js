@@ -56,6 +56,12 @@ export class ModalManager {
         this.#dom.detailsModalSeasonSelect.addEventListener('change', (e) => this.#handleSeasonChange(e));
         this.#dom.detailsModalEpisodesList.addEventListener('click', (e) => this.#handleEpisodeClick(e));
         this.#dom.detailsModalAddListButton.addEventListener('click', () => this.#handleToggleMyList());
+
+        // ==========================================================
+        // MUDANÇA (Elenco/Gênero): Adiciona listeners de clique
+        // ==========================================================
+        this.#dom.detailsModalGenres.addEventListener('click', (e) => this.#handleGenreClick(e));
+        this.#dom.detailsModalCast.addEventListener('click', (e) => this.#handleActorClick(e));
     }
 
 
@@ -432,6 +438,49 @@ export class ModalManager {
     //  MODAL DE DETALHES
     // ========================================================================
     
+    // ==========================================================
+    // MUDANÇA (Elenco/Gênero): Novas funções de clique
+    // ==========================================================
+    
+    /**
+     * Lida com o clique em um Gênero.
+     */
+    #handleGenreClick(e) {
+        const target = e.target.closest('.clickable-genre');
+        if (!target) return;
+        
+        const genreId = target.dataset.genreId;
+        const genreName = target.textContent;
+        const type = this.#currentModalItem.media_type; // 'movie' ou 'tv'
+        
+        this.closeDetailsModal();
+        
+        // Espera o modal fechar antes de mudar de página
+        setTimeout(() => {
+            this.#app.publicShowBrowsePageForGenre(genreId, genreName, type);
+        }, 300); // 300ms (duração da animação do modal)
+    }
+
+    /**
+     * Lida com o clique em um Ator.
+     */
+    #handleActorClick(e) {
+        const target = e.target.closest('.clickable-actor');
+        if (!target) return;
+        
+        const actorId = target.dataset.actorId;
+        const actorName = target.textContent;
+
+        this.closeDetailsModal();
+        
+        // Espera o modal fechar antes de mudar de página
+        setTimeout(() => {
+            this.#app.publicShowBrowsePageForActor(actorId, actorName);
+        }, 300);
+    }
+    
+    // ==========================================================
+
     #handleToggleMyList() {
         if (!this.#currentModalItem) return;
 
@@ -599,9 +648,50 @@ export class ModalManager {
                 this.#dom.detailsModalSeasons.classList.add('hidden');
             }
             this.#dom.detailsModalAgeRating.textContent = this.#getAgeRating(certifications, type);
-            this.#dom.detailsModalCast.textContent = (credits?.cast?.length > 0) ? credits.cast.slice(0, 3).map(c => c.name).join(', ') : 'Não disponível';
-            this.#dom.detailsModalGenres.textContent = (details.genres?.length > 0) ? details.genres.map(g => g.name).join(', ') : 'Não especificado';
             this.#dom.detailsModalTags.textContent = details.tagline || (details.overview ? details.overview.split(' ').slice(0, 6).join(' ') + '...' : 'Não especificado');
+
+
+            // ==========================================================
+            // MUDANÇA (Elenco/Gênero): Cria spans clicáveis
+            // ==========================================================
+            
+            // --- Gêneros ---
+            this.#dom.detailsModalGenres.innerHTML = ''; // Limpa
+            if (details.genres?.length > 0) {
+                details.genres.forEach((g, index) => {
+                    const el = document.createElement('span');
+                    el.className = 'clickable-genre';
+                    el.textContent = g.name;
+                    el.dataset.genreId = g.id;
+                    this.#dom.detailsModalGenres.appendChild(el);
+                    // Adiciona vírgula, exceto no último
+                    if (index < details.genres.length - 1) {
+                        this.#dom.detailsModalGenres.append(', ');
+                    }
+                });
+            } else {
+                this.#dom.detailsModalGenres.textContent = 'Não especificado';
+            }
+
+            // --- Elenco ---
+            this.#dom.detailsModalCast.innerHTML = ''; // Limpa
+            const cast = credits?.cast?.slice(0, 3);
+            if (cast?.length > 0) {
+                cast.forEach((c, index) => {
+                    const el = document.createElement('span');
+                    el.className = 'clickable-actor';
+                    el.textContent = c.name;
+                    el.dataset.actorId = c.id;
+                    this.#dom.detailsModalCast.appendChild(el);
+                    // Adiciona vírgula, exceto no último
+                    if (index < cast.length - 1) {
+                        this.#dom.detailsModalCast.append(', ');
+                    }
+                });
+            } else {
+                this.#dom.detailsModalCast.textContent = 'Não disponível';
+            }
+            // ==========================================================
 
 
             if (type === 'tv' && details.seasons && details.seasons.length > 0) {
@@ -784,8 +874,11 @@ export class ModalManager {
         this.#dom.detailsModalRating.textContent = '--%';
         this.#dom.detailsModalReleaseDate.textContent = '----';
         this.#dom.detailsModalRuntime.textContent = '--h --min';
+        
+        // MUDANÇA (Elenco/Gênero): Reseta para o estado de carregamento
         this.#dom.detailsModalCast.textContent = 'Carregando...';
         this.#dom.detailsModalGenres.textContent = 'Carregando...';
+        
         this.#dom.detailsModalTags.textContent = 'Carregando...';
         
         // ==========================================================

@@ -1180,8 +1180,10 @@ class FudidoFlixApp {
         // ==========================================================
         if (inbox.length > 0) {
             dom.notificationBadge.classList.remove('hidden');
+            // MUDANÇA (Req 1): Remove referência ao badge mobile
         } else {
             dom.notificationBadge.classList.add('hidden');
+            // MUDANÇA (Req 1): Remove referência ao badge mobile
         }
         // ==========================================================
 

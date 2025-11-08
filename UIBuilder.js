@@ -193,6 +193,9 @@ export class UIBuilder {
             // O listener de clique será adicionado no app.js (delegação)
             
             wrapper.appendChild(removeButton);
+            
+            // MUDANÇA (Req 2): Adiciona classe para targeting de CSS
+            wrapper.classList.add('has-remove-button');
         }
         // ==========================================================
         

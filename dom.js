@@ -118,4 +118,6 @@ export const dom = {
     notificationToast: document.getElementById('notification-toast'),
     notificationToastMessage: document.getElementById('notification-toast-message'),
     notificationToastClose: document.getElementById('notification-toast-close'),
+    
+    // MUDANÇA (Req 1): Botões de notificação mobile REMOVIDOS
 };

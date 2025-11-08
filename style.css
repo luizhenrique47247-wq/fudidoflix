@@ -295,26 +295,33 @@ body::-webkit-scrollbar {
     justify-content: center;
     
     border: 2px solid rgba(255, 255, 255, 0.7); /* Borda mais grossa */
-    opacity: 0.8; /* Visível por padrão na página de lista */
+    
+    /* MUDANÇA (Req 2): Escondido por padrão */
+    opacity: 0;
+    pointer-events: none;
     
     transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
     cursor: pointer;
     transform: scale(0.9); /* Um pouco menor, para crescer no hover */
 }
 
-/* Oculta o botão em carrosséis (onde não é usado) */
-.carousel-container .poster-grid-remove-button,
-.poster-grid-wrapper .poster-grid-remove-button {
-    opacity: 0; /* Esconde por padrão */
-    pointer-events: none;
-}
-
-/* Mostra SOMENTE quando o wrapper da grade PAI está sendo "hovered" */
+/* MUDANÇA (Req 2): Aparece no HOVER (para Desktop) */
 .poster-grid-wrapper:hover .poster-grid-remove-button {
     opacity: 1; 
     pointer-events: auto;
     transform: scale(1); /* Cresce no hover */
 }
+
+/* MUDANÇA (Req 2): Força a aparição em telas mobile (< 768px) 
+                   SOMENTE SE tiver a classe 'has-remove-button' */
+@media (max-width: 767px) {
+    .poster-grid-wrapper.has-remove-button .poster-grid-remove-button {
+        opacity: 0.8; /* Visível no mobile */
+        pointer-events: auto;
+        transform: scale(0.9); /* Estado "normal" no mobile */
+    }
+}
+
 
 .poster-grid-remove-button:hover {
     background-color: rgba(229, 9, 20, 0.9); /* Vermelho FudidoFlix */
@@ -582,4 +589,16 @@ body::-webkit-scrollbar {
     display: block;
     opacity: 1;
     transform: translateY(0);
+}
+
+/* MUDANÇA (Req 1): Fix do menu de notificação no mobile */
+@media (max-width: 420px) { /* Telas bem pequenas */
+    #notification-menu {
+        position: fixed; /* Desprende do sino */
+        top: 60px; /* Abaixo da navbar */
+        right: 1rem; /* 16px da borda */
+        left: 1rem; /* 16px da borda */
+        width: auto; /* Ocupa a largura com as margens */
+        max-width: calc(100vw - 2rem); 
+    }
 }

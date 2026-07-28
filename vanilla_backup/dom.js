@@ -1,0 +1,109 @@
+/**
+ * Seleciona e exporta todos os elementos do DOM como um único objeto
+ * para facilitar o acesso em toda a aplicação.
+ */
+export const dom = {
+    // Elementos principais
+    mainNav: document.getElementById('main-nav'),
+    logo: document.getElementById('logo'),
+    heroSection: document.getElementById('hero'),
+    heroTitle: document.getElementById('hero-title'),
+    heroOverview: document.getElementById('hero-overview'),
+    heroPlayButton: document.getElementById('hero-play-button'),
+    heroInfoButton: document.getElementById('hero-info-button'),
+    contentRowsContainer: document.getElementById('content-rows'),
+    searchButton: document.getElementById('search-button'),
+    searchInput: document.getElementById('search-input'),
+    
+    profileButton: document.getElementById('profile-button'),
+    profileMenu: document.getElementById('profile-menu'),
+    profileClearListButton: document.getElementById('profile-clear-list-button'),
+    profileClearHistoryButton: document.getElementById('profile-clear-history-button'),
+    profileLogoutButton: document.getElementById('profile-logout-button'),
+    
+    mainContent: document.getElementById('main-content'),
+
+    // Links de Navegação
+    mainNavigation: document.getElementById('main-navigation'),
+    navInicio: document.getElementById('nav-inicio'),
+    navSeries: document.getElementById('nav-series'),
+    navFilmes: document.getElementById('nav-filmes'),
+    navAnimes: document.getElementById('nav-animes'),
+    navMangas: document.getElementById('nav-mangas'),
+    navCalendario: document.getElementById('nav-calendario'),
+    navAoVivo: document.getElementById('nav-ao-vivo'),
+    navMinhaLista: document.getElementById('nav-minha-lista'),
+    navSorte: document.getElementById('nav-sorte'),
+
+    // Modal do Player
+    playerModal: document.getElementById('player-modal'),
+    playerContainer: document.getElementById('player-container'),
+    closePlayerButton: document.getElementById('close-player'),
+    playerModalContent: document.getElementById('player-modal-content'),
+    playerControlsTV: document.getElementById('player-controls-tv'),
+    playerEpisodesButton: document.getElementById('player-episodes-button'),
+    playerNextButton: document.getElementById('player-next-button'),
+    playerServerSelect: document.getElementById('player-server-select'),
+
+    // Elementos do painel de episódios
+    playerEpisodeListPanel: document.getElementById('player-ep-list-panel'),
+    playerEpListCloseButton: document.getElementById('player-ep-list-close-button'),
+    playerEpListSeasonSelect: document.getElementById('player-ep-list-season-select'),
+    playerEpListContainer: document.getElementById('player-ep-list-container'),
+
+    // Modal de Detalhes
+    detailsModal: document.getElementById('details-modal'),
+    closeDetailsModalButton: document.getElementById('close-details-modal'),
+    detailsModalBackdropImage: document.getElementById('details-modal-backdrop-image'),
+    detailsModalTitle: document.getElementById('details-modal-title'),
+    detailsModalRating: document.getElementById('details-modal-rating'),
+    detailsModalReleaseDate: document.getElementById('details-modal-release-date'),
+    detailsModalRuntime: document.getElementById('details-modal-runtime'),
+    detailsModalSeasons: document.getElementById('details-modal-seasons'),
+    detailsModalAgeRating: document.getElementById('details-modal-age-rating'),
+    detailsModalOverview: document.getElementById('details-modal-overview'),
+    detailsModalCast: document.getElementById('details-modal-cast'),
+    detailsModalGenres: document.getElementById('details-modal-genres'),
+    detailsModalTags: document.getElementById('details-modal-tags'),
+    detailsModalPlayButton: document.getElementById('details-modal-play-button'),
+    detailsModalTrailerButton: document.getElementById('details-modal-trailer-button'),
+    detailsModalAddListButton: document.getElementById('details-modal-add-list-button'),
+    
+    seriesSeasonsContainer: document.getElementById('series-seasons-container'),
+    detailsModalSeasonSelect: document.getElementById('details-modal-season-select'),
+    detailsModalEpisodesList: document.getElementById('details-modal-episodes-list'),
+
+    confirmationModal: document.getElementById('confirmation-modal'),
+    confirmationModalTitle: document.getElementById('confirmation-modal-title'),
+    confirmationModalMessage: document.getElementById('confirmation-modal-message'),
+    confirmationModalCancelButton: document.getElementById('confirmation-modal-cancel-button'),
+    confirmationModalConfirmButton: document.getElementById('confirmation-modal-confirm-button'),
+
+    // Elementos da Intro
+    introModal: document.getElementById('intro-modal'),
+    introVideo: document.getElementById('intro-video'),
+    skipIntroButton: document.getElementById('skip-intro-button'),
+
+    hamburgerButton: document.getElementById('hamburger-button'),
+    mobileMenuOverlay: document.getElementById('mobile-menu-overlay'),
+    mobileMenuPanel: document.getElementById('mobile-menu-panel'),
+    mobileMenuCloseButton: document.getElementById('mobile-menu-close-button'),
+    mobileNav: document.getElementById('mobile-navigation'),
+    
+    mobileClearListButton: document.getElementById('mobile-clear-list-button'),
+    mobileClearHistoryButton: document.getElementById('mobile-clear-history-button'),
+    mobileLogoutButton: document.getElementById('mobile-logout-button'),
+
+    backToTopButton: document.getElementById('back-to-top-button'),
+
+    // Notificações
+    notificationButton: document.getElementById('notification-button'),
+    notificationBadge: document.getElementById('notification-badge'),
+    notificationMenu: document.getElementById('notification-menu'),
+    notificationList: document.getElementById('notification-list'),
+    notificationClearAll: document.getElementById('notification-clear-all'),
+
+    notificationToast: document.getElementById('notification-toast'),
+    notificationToastMessage: document.getElementById('notification-toast-message'),
+    notificationToastClose: document.getElementById('notification-toast-close'),
+};

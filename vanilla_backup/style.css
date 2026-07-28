@@ -1,0 +1,619 @@
+/* ==========================================================
+   MUDANÇA AQUI (Request 2):
+   Aplica as regras de scroll ao 'html' E 'body'
+   ========================================================== */
+
+/* Define a fonte padrão (Inter) e o fundo principal */
+html, body {
+    background-color: #141414;
+    font-family: 'Inter', sans-serif;
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Esconde a barra de rolagem do Chrome, Safari e Opera */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Gradiente linear na parte inferior do "hero" para suavizar a transição */
+#hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 7.5rem; /* 120px */
+    background-image: linear-gradient(to bottom, rgba(20, 20, 20, 0), #141414 90%);
+    z-index: 1; /* Garante que fique acima da imagem de fundo */
+}
+
+/* ========================================================================
+   ESTILOS DO CARROSSEL (PÁGINA INICIAL) - MODIFICADO
+   ========================================================================= */
+
+/* Container geral da fileira (título + carrossel + setas) */
+.row-wrapper {
+    /* position: relative; <-- REMOVIDO DAQUI */
+    margin-bottom: 2rem; 
+}
+
+/* ==========================================================
+   NOVO WRAPPER RELATIVO (A SOLUÇÃO)
+   ========================================================== */
+.carousel-wrapper-relative {
+    position: relative; /* Este é o novo parente para as setas */
+}
+
+/* Container que faz o scroll */
+.carousel-container {
+    overflow-x: scroll;
+    overflow-y: visible;
+    white-space: nowrap;
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
+    scroll-behavior: smooth; /* Habilita a animação suave do scroll */
+    padding-left: 0.5rem;  
+  	padding-right: 0.5rem;
+    padding-top: 1rem;    /* py-4 (16px) */
+    padding-bottom: 1rem; /* py-4 (16px) */
+}
+
+.carousel-container::-webkit-scrollbar {
+    display: none; /* Esconde a barra de rolagem */
+}
+
+/* ========================================================
+   CORREÇÃO DO TAMANHO DO PÔSTER (RESPONSIVO)
+   ======================================================== */
+
+/* Wrapper individual para cada poster no carrossel (NOVO) */
+.poster-carousel-wrapper {
+    display: inline-block; /* Para permitir margin */
+    position: relative; /* Contexto para o overlay do título */
+    
+    /* FORÇA O MOLDE PADRÃO (Mobile) */
+    width: 140px; 
+    height: 210px;
+    
+    margin-right: 0.75rem; /* Aumenta o espaçamento horizontal (era 0.5rem) */
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Transição movida para cá */
+    
+    /* Garante que o fundo não seja transparente se a imagem for esquisita */
+    background-color: #000; 
+    border-radius: 4px;
+}
+
+/* Tablet (sm) */
+@media (min-width: 640px) {
+    .poster-carousel-wrapper {
+        width: 160px; 
+        height: 240px;
+    }
+}
+
+/* Desktop (lg) */
+@media (min-width: 1024px) {
+    .poster-carousel-wrapper {
+        width: 180px; 
+        height: 270px;
+    }
+}
+
+
+/* Estilização de cada pôster (CARROSSEL) */
+.poster-carousel {
+    /* PREENCHE O MOLDE (agora responsivo) */
+    width: 100%; 
+    height: 100%;
+    
+    object-fit: cover; /* Corta o excesso da imagem */
+    border-radius: 4px;
+    display: block; /* Remove espaço extra abaixo da imagem */
+    transition: filter 0.3s; /* Mantém a transição do brilho */
+    cursor: pointer;
+}
+
+/* Efeito de zoom no WRAPPER ao passar o mouse */
+.poster-carousel-wrapper:hover {
+    transform: scale(1.08);
+    z-index: 10; /* Garante que fique por cima dos vizinhos */
+}
+
+/* Efeito de brilho na IMAGEM ao passar o mouse no WRAPPER */
+.poster-carousel-wrapper:hover .poster-carousel {
+    filter: brightness(1.1);
+}
+
+/* Overlay do título (NOVO) */
+.poster-title-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
+    color: white;
+    font-size: 0.8rem; /* Tamanho pequeno */
+    font-weight: 500;
+    padding: 1.5rem 0.5rem 0.5rem 0.5rem; /* Padding (top, right, bottom, left) */
+    text-align: center;
+    border-bottom-left-radius: 4px; /* Arredonda cantos inferiores */
+    border-bottom-right-radius: 4px;
+    opacity: 0; /* Começa invisível */
+    transition: opacity 0.3s ease-out;
+    pointer-events: none; /* Não interfere no clique do poster */
+    white-space: normal; /* Permite quebra de linha */
+    line-height: 1.2; /* Ajusta espaçamento entre linhas */
+}
+
+/* Mostra o overlay ao passar o mouse no WRAPPER */
+.poster-carousel-wrapper:hover .poster-title-overlay {
+    opacity: 1;
+}
+
+/* ========================================================
+   ESTILOS DAS SETAS (CORREÇÃO RESPONSIVA)
+   ======================================================== */
+
+.carousel-arrow {
+    position: absolute;
+    top: 1rem;      /* <-- MUDANÇA: Alinha com o padding-top (16px) do container */
+    
+    /* ALTURA RESPONSIVA (acompanha o poster-carousel-wrapper) */
+    height: 210px;
+    
+    width: 4rem; 
+    background-color: transparent; 
+    color: white;
+    border: none;
+    display: flex;         
+    align-items: center;   /* <-- Centraliza o ícone verticalmente */
+    cursor: pointer;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.3s ease, height 0.3s ease; /* Adiciona transição de altura */
+    padding: 0;
+    pointer-events: auto; /* Garante que a seta seja clicável */
+}
+
+/* Tablet (sm) */
+@media (min-width: 640px) {
+    .carousel-arrow {
+        height: 240px;
+    }
+}
+
+/* Desktop (lg) */
+@media (min-width: 1024px) {
+    .carousel-arrow {
+        height: 270px;
+    }
+}
+
+
+/* MUDANÇA: O hover agora é no NOVO wrapper */
+.carousel-wrapper-relative:hover .carousel-arrow {
+    opacity: 1; /* Mostra as setas ao passar o mouse na fileira */
+}
+
+.carousel-arrow:hover {
+    color: #fff; 
+}
+
+.carousel-arrow-left {
+    left: 0;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.6), transparent);
+    justify-content: flex-start; /* Alinha o ícone à esquerda */
+    padding-left: 0.75rem; /* 12px */
+}
+
+.carousel-arrow-left:hover {
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent);
+}
+
+
+.carousel-arrow-right {
+    right: 0;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    background-image: linear-gradient(to left, rgba(0, 0, 0, 0.6), transparent);
+    justify-content: flex-end; /* Alinha o ícone à direita */
+    padding-right: 0.75rem; /* 12px */
+}
+
+.carousel-arrow-right:hover {
+    background-image: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
+}
+
+
+/* Esconde setas se JS adicionar a classe 'hidden' (quando no início/fim) */
+.carousel-arrow.hidden {
+    display: none;
+}
+
+
+/* ========================================================================
+   ESTILOS DA GRADE (PÁGINA EXPLORAR/BUSCA) - MODIFICADO
+   ========================================================================= */
+
+/* NOVO: Wrapper para cada card na grade */
+.poster-grid-wrapper {
+    position: relative;
+    display: block;
+    border-radius: 4px; /* Para o scale não mostrar cantos vivos */
+    transition: transform 0.3s ease-out;
+    cursor: pointer;
+}
+
+/* Estilização de cada pôster (GRADE) - (Sem hover de transform) */
+.poster-grid {
+    width: 100%; /* Ocupa a célula da grade */
+    height: auto; /* Mantém a proporção */
+    aspect-ratio: 2 / 3; /* Proporção de pôster (largura/altura) */
+    object-fit: cover;
+    border-radius: 4px;
+    transition: filter 0.3s; /* Apenas transição do filtro */
+    display: block; /* Remove espaço extra de imagem */
+}
+
+/* Efeito de zoom no WRAPPER ao passar o mouse */
+.poster-grid-wrapper:hover {
+    transform: scale(1.05);
+    z-index: 10; /* Para ficar sobre os vizinhos */
+}
+
+/* Efeito de brilho na IMAGEM ao passar o mouse no WRAPPER */
+.poster-grid-wrapper:hover .poster-grid {
+    filter: brightness(1.1);
+}
+
+/* Mostra o overlay (copiado do carrossel) ao passar o mouse no WRAPPER */
+.poster-grid-wrapper:hover .poster-title-overlay {
+    opacity: 1;
+}
+
+/* ==========================================================
+   MUDANÇA (Req 4): Botão de remover da grade (Continuar Assistindo)
+   ========================================================== */
+.poster-grid-remove-button {
+    position: absolute;
+    top: 0.5rem; /* 8px */
+    right: 0.5rem; /* 8px */
+    z-index: 11; /* Acima da imagem, abaixo do hover-scale */
+    
+    background-color: rgba(0, 0, 0, 0.8); /* Mais opaco */
+    color: white;
+    border-radius: 50%;
+    width: 2.25rem; /* 36px - Maior */
+    height: 2.25rem; /* 36px - Maior */
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    border: 2px solid rgba(255, 255, 255, 0.7); /* Borda mais grossa */
+    
+    /* MUDANÇA (Req 2): Escondido por padrão */
+    opacity: 0;
+    pointer-events: none;
+    
+    transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    transform: scale(0.9); /* Um pouco menor, para crescer no hover */
+}
+
+/* MUDANÇA (Req 2): Aparece no HOVER (para Desktop) */
+.poster-grid-wrapper:hover .poster-grid-remove-button {
+    opacity: 1; 
+    pointer-events: auto;
+    transform: scale(1); /* Cresce no hover */
+}
+
+/* MUDANÇA (Req 2): Força a aparição em telas mobile (< 768px) 
+                   SOMENTE SE tiver a classe 'has-remove-button' */
+@media (max-width: 767px) {
+    .poster-grid-wrapper.has-remove-button .poster-grid-remove-button {
+        opacity: 0.8; /* Visível no mobile */
+        pointer-events: auto;
+        transform: scale(0.9); /* Estado "normal" no mobile */
+    }
+}
+
+
+.poster-grid-remove-button:hover {
+    background-color: rgba(229, 9, 20, 0.9); /* Vermelho FudidoFlix */
+    border-color: #fff;
+    transform: scale(1.1); /* Efeito de zoom no botão */
+}
+
+/* Ajusta o ícone 'x' dentro do botão maior */
+.poster-grid-remove-button > i {
+    width: 1.1rem; /* 18px */
+    height: 1.1rem; /* 18px */
+}
+
+
+/* ========================================================================
+   OUTROS ESTILOS
+   ========================================================================= */
+
+/* Animação suave para a barra de navegação */
+#main-nav {
+    transition: background-color 0.4s ease;
+}
+
+/* Estilo para o modal de detalhes (filme/série) */
+.details-modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+.details-modal-content {
+    background-color: #181818; /* Tom mais escuro, como na Netflix */
+    color: white;
+    border-radius: 8px;
+    max-height: 90vh;
+    overflow-y: auto;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+.details-modal-content::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+}
+
+/* Ajustes para o layout de episódios no modal */
+.episode-item {
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+    padding: 1rem 0.5rem; /* Mais espaçamento */
+    border-bottom: 1px solid #333;
+}
+.episode-item:last-child {
+    border-bottom: none;
+}
+.episode-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+}
+.episode-item.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.episode-thumbnail {
+    width: 120px; /* Largura ajustada */
+    height: 70px; /* Altura ajustada */
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+/* Estilo para o campo de busca */
+#search-input {
+    transition: width 0.3s ease-in-out;
+}
+
+/* NOVO: Estilo para os seletores de Gênero e Ordem */
+.browse-select {
+    background-color: #1f1f1f; /* Um pouco mais claro que o fundo */
+    color: white;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.browse-select:focus {
+    outline: none;
+    border-color: white;
+}
+
+/* NOVO: Estilo para as opções de prêmios (dourado) */
+.browse-select option.award {
+    color: #F59E0B; /* Cor "âmbar" do Tailwind, um dourado */
+    font-weight: 700;
+    background-color: #1f1f1f; /* Garante o fundo no Firefox */
+}
+
+
+/* ==========================================================
+   ESTILOS DO PAINEL DE EPISÓDIOS
+   ========================================================== */
+
+/* Painel que desliza (começa fora da tela) */
+.player-episode-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 380px; /* Largura estilo Netflix */
+    max-width: 90vw; /* Limite em telas pequenas */
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px); /* Efeito de vidro fosco */
+    z-index: 120; 
+    
+    /* Animação suave */
+    transform: translateX(100%); /* Começa fora da tela (à direita) */
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Classe 'visible' que o JS vai adicionar para mostrar o painel */
+.player-episode-panel.visible {
+    transform: translateX(0); /* Move para dentro da tela */
+}
+
+/* Botões ficam por BAIXO */
+#player-controls-tv, #close-player {
+    z-index: 110;
+}
+
+
+/* Esconde a barra de rolagem da lista de episódios no painel */
+#player-ep-list-container::-webkit-scrollbar {
+    display: none;
+}
+#player-ep-list-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ==========================================================
+   ESTILOS DO MODAL DA INTRO
+   ========================================================== */
+#intro-modal {
+    background-color: #000;
+    transition: opacity 0.5s ease-out;
+}
+
+/* Classe para esconder a intro */
+#intro-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ==========================================================
+   MUDANÇA AQUI (Request 1): Adiciona transição ao #main-content
+   ========================================================== */
+#main-content {
+    /* Esta transição deve ter a mesma duração do setTimeout no app.js */
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* ==========================================================
+   MUDANÇA (Perfil): Estilo do backdrop de confirmação (NOVO)
+   ========================================================== */
+.confirmation-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+/* ==========================================================
+   NOVO (Responsividade): Estilos do Menu Hambúrguer
+   ========================================================== */
+#mobile-menu-panel.open {
+    transform: translateX(0);
+}
+
+/* ==========================================================
+   NOVO (Responsividade): Estilos do Botão Voltar ao Topo
+   ========================================================== */
+#back-to-top-button.visible {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ==========================================================
+   MUDANÇA (Notificações): Estilos do Badge, Menu e Toast
+   ========================================================== */
+
+/* Ponto vermelho (badge) no sino */
+.notification-badge {
+    position: absolute;
+    top: 0px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background-color: #E50914;
+    border: 2px solid #141414;
+    border-radius: 50%;
+}
+
+/* Item individual na lista de notificações */
+.notification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #333;
+    font-size: 0.875rem;
+    color: #d1d5db; /* text-gray-300 */
+}
+.notification-item:last-child {
+    border-bottom: none;
+}
+.notification-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Link clicável (o texto) */
+.notification-item-link {
+    flex-grow: 1;
+    cursor: pointer;
+    margin-right: 0.5rem; /* 8px */
+}
+.notification-item-link:hover {
+    color: #fff;
+}
+
+/* Cores dos tipos de notificação */
+.notification-item-link strong {
+    font-weight: 600;
+}
+.notification-item-link strong.new-ep {
+    color: #E50914; /* Vermelho */
+}
+.notification-item-link strong.continue {
+    color: #3b82f6; /* Azul */
+}
+.notification-item-link strong.my-list {
+    color: #22c55e; /* Verde */
+}
+
+
+/* Botão 'X' para limpar item */
+.notification-clear-item {
+    flex-shrink: 0;
+    color: #9ca3af; /* text-gray-400 */
+    padding: 2px;
+}
+.notification-clear-item:hover {
+    color: #E50914;
+}
+
+/* Mensagem de lista vazia */
+#notification-list-empty {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280; /* text-gray-500 */
+}
+
+/* Pop-up Toast */
+#notification-toast.visible {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* MUDANÇA (Req 1): Fix do menu de notificação no mobile */
+@media (max-width: 420px) { /* Telas bem pequenas */
+    #notification-menu {
+        position: fixed; /* Desprende do sino */
+        top: 60px; /* Abaixo da navbar */
+        right: 1rem; /* 16px da borda */
+        left: 1rem; /* 16px da borda */
+        width: auto; /* Ocupa a largura com as margens */
+        max-width: calc(100vw - 2rem); 
+    }
+}
+
+/* ==========================================================
+   MUDANÇA (Elenco/Gênero Clicável): Estilos
+   ========================================================== */
+.clickable-genre,
+.clickable-actor {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.clickable-genre:hover,
+.clickable-actor:hover {
+    color: #fff; /* Fica branco ao passar o mouse */
+    text-decoration: underline;
+}

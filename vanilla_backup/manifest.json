@@ -1,0 +1,23 @@
+{
+  "name": "FudidoFlix",
+  "short_name": "FudidoFlix",
+  "description": "O Seu Streaming, As Suas Regras",
+  "start_url": "./home.html",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#E50914",
+  "icons": [
+    {
+      "src": "./imgapp.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./imgapp.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

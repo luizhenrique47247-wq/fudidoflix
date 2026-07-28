@@ -115,7 +115,6 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
     { id: 'tv', name: 'Séries' },
     { id: 'movie', name: 'Filmes' },
     { id: 'anime', name: 'Animes' },
-    { id: 'mangas', name: 'Mangás' },
     { id: 'minha-lista', name: 'Minha lista' },
     { id: 'sorte', name: 'Sorte', icon: <Dices className="w-4 h-4 mr-1 inline-block" /> },
     { 
@@ -294,11 +293,11 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
                   Limpar Histórico
                 </button>
                 <button 
-                  onClick={() => { setProfileOpen(false); setActiveTab('addons'); }}
+                  onClick={() => { setProfileOpen(false); setActiveTab('historico'); }}
                   className="w-full text-left px-4 py-3 text-sm text-zinc-300 hover:bg-zinc-900/60 hover:text-white flex items-center transition-colors font-medium border-b border-zinc-900/40"
                 >
-                  <Puzzle className="w-4 h-4 mr-3 text-zinc-500" />
-                  Configurar Addons
+                  <History className="w-4 h-4 mr-3 text-[#E50914]" />
+                  Meu Histórico
                 </button>
                 <button 
                   onClick={() => { setProfileOpen(false); onChangeProfile(); }}
@@ -402,11 +401,11 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
                 Limpar Histórico
               </button>
               <button 
-                onClick={() => { setMobileMenuOpen(false); setActiveTab('addons'); }}
+                onClick={() => { setMobileMenuOpen(false); setActiveTab('historico'); }}
                 className="w-full text-left p-3 rounded-xl hover:bg-zinc-900/60 text-zinc-300 flex items-center text-base font-medium transition-colors"
               >
-                <Puzzle className="w-5 h-5 mr-3 text-zinc-500" />
-                Configurar Addons
+                <History className="w-5 h-5 mr-3 text-[#E50914]" />
+                Meu Histórico
               </button>
               <button 
                 onClick={() => { setMobileMenuOpen(false); onChangeProfile(); }}

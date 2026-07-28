@@ -6,8 +6,8 @@ import Login from './views/Login';
 import Home from './views/Home';
 import Browse from './views/Browse';
 import MinhaLista from './views/MinhaLista';
+import Historico from './views/Historico';
 import AoVivo from './views/AoVivo';
-import Mangas from './views/Mangas';
 import Sorte from './views/Sorte';
 import Profiles from './views/Profiles';
 import * as Storage from './services/storageService';
@@ -337,11 +337,13 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'addons' && <Addons />}
+        {activeTab === 'historico' && (
+          <Historico 
+            onSelectMedia={(id, type) => setDetailsMedia({ id, type })}
+          />
+        )}
 
         {activeTab === 'ao-vivo' && <AoVivo />}
-
-        {activeTab === 'mangas' && <Mangas />}
 
         {activeTab === 'sorte' && (
           <Sorte 

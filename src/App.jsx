@@ -288,7 +288,7 @@ export default function App() {
           onEnded={handleSkipIntro}
           onError={handleSkipIntro}
         >
-          <source src="/mQfvVxg.mp4" type="video/mp4" />
+          <source src="./mQfvVxg.mp4" type="video/mp4" />
         </video>
         <button 
           onClick={handleSkipIntro} 

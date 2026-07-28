@@ -40,7 +40,8 @@ const PLAYER_APIS = {
   }
 };
 
-export default function PlayerModal({ id, type, initialSeason, initialEpisode, itemData, resolvedStreamUrl, isTrailer, trailerKey, onClose, onPlayerClose }) {
+export default function PlayerModal({ id, type: rawType, initialSeason, initialEpisode, itemData, resolvedStreamUrl, isTrailer, trailerKey, onClose, onPlayerClose }) {
+  const type = rawType === 'anime' ? 'tv' : rawType;
   // Default server: ViewPlayer for Movies, AutoEmbed for TV Series
   const [server, setServer] = useState(type === 'tv' ? 'autoembed' : 'viewplayer');
   const [imdbId, setImdbId] = useState(itemData?.imdb_id || (typeof id === 'string' && id.startsWith('tt') ? id : ''));

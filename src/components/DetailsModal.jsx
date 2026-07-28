@@ -3,7 +3,8 @@ import { X, Play, Clapperboard, Plus, Check, Eye, Loader2 } from 'lucide-react';
 import { fetchTMDB, IMG_BASE_URL, IMG_POSTER_URL } from '../services/api';
 import * as Storage from '../services/storageService';
 
-export default function DetailsModal({ id, type, onClose, onPlay, onPlayTrailer, onSelectActor, onSelectGenre }) {
+export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPlayTrailer, onSelectActor, onSelectGenre }) {
+  const type = rawType === 'anime' ? 'tv' : rawType;
   const [details, setDetails] = useState(null);
   const [credits, setCredits] = useState(null);
   const [ageRating, setAgeRating] = useState('L');

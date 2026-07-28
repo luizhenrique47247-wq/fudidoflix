@@ -327,7 +327,7 @@ export default function App() {
           <Browse 
             type={activeTab}
             title={activeTab === 'tv' ? 'Séries' : (activeTab === 'movie' ? 'Filmes' : 'Animes')}
-            onSelectMedia={(id, type) => setDetailsMedia({ id, type })}
+            onSelectMedia={(id, type) => setDetailsMedia({ id, type: type === 'anime' ? 'tv' : type })}
           />
         )}
 

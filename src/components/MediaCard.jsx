@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { IMG_POSTER_URL } from '../services/api';
 
 export default function MediaCard({ item, type, onClick, showRemoveButton, onRemove }) {
-  const itemType = type || item.media_type || (item.title ? 'movie' : 'tv');
+  const itemType = (type && type !== 'anime') ? type : (item.media_type || (item.title ? 'movie' : 'tv'));
   const posterPath = item.poster_path;
 
   if (!posterPath) return null;

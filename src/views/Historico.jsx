@@ -40,7 +40,7 @@ export default function Historico({ onSelectMedia }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-zinc-900 pb-4">
         <div>
           <h2 className="text-3xl font-black text-white tracking-wide flex items-center gap-3">
-            <History className="w-8 h-8 text-[#E50914]" /> Histórico de Exibição
+            <History className="w-8 h-8 text-zinc-400" /> Histórico de Exibição
           </h2>
           <p className="text-zinc-400 text-sm mt-1">Títulos que você começou a assistir recentemente.</p>
         </div>

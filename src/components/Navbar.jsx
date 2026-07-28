@@ -296,7 +296,7 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
                   onClick={() => { setProfileOpen(false); setActiveTab('historico'); }}
                   className="w-full text-left px-4 py-3 text-sm text-zinc-300 hover:bg-zinc-900/60 hover:text-white flex items-center transition-colors font-medium border-b border-zinc-900/40"
                 >
-                  <History className="w-4 h-4 mr-3 text-[#E50914]" />
+                  <History className="w-4 h-4 mr-3 text-zinc-500" />
                   Meu Histórico
                 </button>
                 <button 
@@ -404,7 +404,7 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
                 onClick={() => { setMobileMenuOpen(false); setActiveTab('historico'); }}
                 className="w-full text-left p-3 rounded-xl hover:bg-zinc-900/60 text-zinc-300 flex items-center text-base font-medium transition-colors"
               >
-                <History className="w-5 h-5 mr-3 text-[#E50914]" />
+                <History className="w-5 h-5 mr-3 text-zinc-500" />
                 Meu Histórico
               </button>
               <button 

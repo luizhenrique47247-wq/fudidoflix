@@ -158,12 +158,14 @@ export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPla
           details && (
             <>
               {/* Top Fanart Banner Section */}
-              <div 
-                className="relative w-full h-64 md:h-96 bg-cover bg-center flex items-end pb-8"
-                style={{ backgroundImage: `url(${IMG_BASE_URL}${details.backdrop_path || details.poster_path})` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/35 to-transparent"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent"></div>
+              <div className="relative w-full h-72 md:h-[400px] flex items-end pb-8 overflow-hidden rounded-t-xl bg-zinc-950">
+                <img 
+                  src={`${IMG_BASE_URL}${details.backdrop_path || details.poster_path}`}
+                  alt={details.title || details.name}
+                  className="absolute inset-0 w-full h-full object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent"></div>
 
                 <div className="relative z-10 px-6 md:px-12 w-full">
                   <h3 className="text-2xl md:text-5xl font-black text-white leading-tight drop-shadow-lg tracking-tight select-none mb-4">

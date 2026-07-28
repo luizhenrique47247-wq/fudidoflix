@@ -20,7 +20,7 @@ export default function Hero({ item, onPlay, onInfo }) {
   return (
     <section 
       id="hero" 
-      className="relative h-[96vh] min-h-[500px] w-full bg-cover bg-center bg-no-repeat transition-all duration-500 flex items-end pb-40 md:pb-44"
+      className="relative h-[96vh] min-h-[500px] w-full bg-cover bg-top bg-no-repeat transition-all duration-500 flex items-end pb-40 md:pb-44"
       style={{ backgroundImage: `url(${backdropUrl})` }}
     >
       {/* Dark left-to-right gradient vignette and bottom gradient vignette */}

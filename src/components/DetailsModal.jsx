@@ -174,10 +174,10 @@ export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPla
   if (!id || !type) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] details-modal-backdrop flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] details-modal-backdrop flex justify-center pt-8 md:pt-12 px-2 sm:px-4 pb-0 bg-black/70 backdrop-blur-sm">
       <div className="absolute inset-0" onClick={onClose}></div>
 
-      <div className="relative w-full max-w-4xl details-modal-content max-h-[85vh] overflow-y-auto bg-zinc-900 border border-zinc-800 text-white rounded-xl shadow-2xl z-10 flex flex-col scrollbar-none animate-scale-up">
+      <div className="relative w-full max-w-4xl h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] overflow-y-auto bg-zinc-900 border-t border-x border-zinc-800 text-white rounded-t-2xl rounded-b-none shadow-2xl z-10 flex flex-col scrollbar-none animate-scale-up">
         <button 
           onClick={onClose} 
           className="absolute top-4 right-4 z-50 text-white bg-black/60 hover:bg-black/90 rounded-full p-2 border border-zinc-800 transition-colors cursor-pointer"

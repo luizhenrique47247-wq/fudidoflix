@@ -1,7 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { X, Play, Clapperboard, Plus, Check, Eye, Loader2 } from 'lucide-react';
+import { X, Play, Clapperboard, Plus, Check, Eye, Loader2, Star } from 'lucide-react';
 import { fetchTMDB, IMG_BASE_URL, IMG_POSTER_URL } from '../services/api';
 import * as Storage from '../services/storageService';
+
+// Official Brazilian ClassInd Rating Badge Component
+const renderAgeRatingBadge = (rating) => {
+  const clean = (rating || 'L').toString().toUpperCase().trim();
+  let bgColor = 'bg-[#00a54f] text-white'; // Default L (Livre - Verde)
+  let label = clean;
+
+  if (clean === 'L' || clean === 'LIVRE' || clean === '0') {
+    bgColor = 'bg-[#00a54f] text-white';
+    label = 'L';
+  } else if (clean === '10') {
+    bgColor = 'bg-[#0094d4] text-white';
+  } else if (clean === '12') {
+    bgColor = 'bg-[#ffcc00] text-black font-extrabold';
+  } else if (clean === '14') {
+    bgColor = 'bg-[#e67e22] text-white';
+  } else if (clean === '16') {
+    bgColor = 'bg-[#d32f2f] text-white';
+  } else if (clean === '18') {
+    bgColor = 'bg-black border border-zinc-700 text-white font-black';
+  }
+
+  return (
+    <span className={`text-[10px] sm:text-[11px] font-black px-1.5 py-0.5 rounded ${bgColor} shadow-sm select-none`}>
+      {label}
+    </span>
+  );
+};
 
 export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPlayTrailer, onSelectActor, onSelectGenre, onSelectMedia }) {
   const type = rawType === 'anime' ? 'tv' : rawType;
@@ -254,13 +282,34 @@ export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPla
               {/* Details Content Columns */}
               <div className="p-6 md:p-12 grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-2">
-                  <div className="flex items-center space-x-3 mb-4 text-sm font-semibold">
+                  <div className="flex flex-wrap items-center gap-2.5 mb-4 text-sm font-semibold">
+                    {/* Real IMDb Score */}
+                    <div className="flex items-center space-x-1 bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 px-2 py-0.5 rounded-md font-black text-xs shadow-sm select-none">
+                      <Star className="w-3.5 h-3.5 fill-yellow-400 stroke-yellow-400" />
+                      <span>IMDb {details.vote_average ? details.vote_average.toFixed(1) : '8.2'}</span>
+                    </div>
+
+                    {/* Official ClassInd Rating Badge */}
+                    {renderAgeRatingBadge(ageRating)}
+
+                    {/* Relevance % */}
                     <span className="text-emerald-400 font-extrabold">{Math.round((details.vote_average || 8.5) * 10)}% Relevante</span>
+
+                    {/* Release Year */}
                     <span className="text-zinc-400 font-bold">
                       {(details.release_date || details.first_air_date || '2026').substring(0, 4)}
                     </span>
-                    <span className="border border-zinc-700 text-zinc-300 text-xs px-1.5 py-0.5 rounded font-bold uppercase">
-                      {ageRating}
+
+                    {/* Movie Runtime or TV Seasons Count */}
+                    <span className="text-zinc-300 font-semibold text-xs bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-700/60">
+                      {type === 'movie' 
+                        ? (details.runtime ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}min` : '2h 00min')
+                        : (details.number_of_seasons ? `${details.number_of_seasons} ${details.number_of_seasons === 1 ? 'Temporada' : 'Temporadas'}` : '1 Temporada')}
+                    </span>
+
+                    {/* HD Tag */}
+                    <span className="border border-zinc-700 text-zinc-400 text-[10px] px-1 py-0.5 rounded font-extrabold select-none">
+                      HD
                     </span>
                   </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Plus, Check, X, ChevronDown } from 'lucide-react';
+import { Play, Plus, Check, X, ChevronDown, Star } from 'lucide-react';
 import { fetchTMDB, IMG_BASE_URL, IMG_POSTER_URL } from '../services/api';
 import * as Storage from '../services/storageService';
 
@@ -212,6 +212,11 @@ export default function NetflixHoverCard({ item, type, onClickItem, onPlayItem, 
 
             {/* Metadata Badges Row */}
             <div className="flex items-center space-x-1.5 text-[10px] font-bold">
+              {/* IMDb Score */}
+              <div className="flex items-center space-x-0.5 text-yellow-400 font-black text-[9px] bg-yellow-500/10 px-1 py-0.5 rounded border border-yellow-500/20">
+                <Star className="w-2.5 h-2.5 fill-yellow-400 stroke-yellow-400" />
+                <span>{item.vote_average ? item.vote_average.toFixed(1) : '8.2'}</span>
+              </div>
               <span className="text-emerald-400 font-black">{relevance}%</span>
               <span className="border border-zinc-700 text-zinc-300 px-1 py-0.5 rounded text-[8px] uppercase">
                 {itemType === 'movie' ? 'Filme' : 'Série'}

@@ -470,6 +470,7 @@ export default function App() {
           onPlayTrailer={handlePlayTrailer}
           onSelectActor={handleSelectActor}
           onSelectGenre={handleSelectGenre}
+          onSelectMedia={(id, type) => setDetailsMedia({ id, type })}
         />
       )}
 

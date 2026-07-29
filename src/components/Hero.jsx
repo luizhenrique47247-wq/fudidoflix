@@ -1,8 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Info } from 'lucide-react';
-import { IMG_BASE_URL } from '../services/api';
+import { fetchTMDB, IMG_BASE_URL } from '../services/api';
 
 export default function Hero({ item, onPlay, onInfo }) {
+  const [logoUrl, setLogoUrl] = useState(null);
+
+  useEffect(() => {
+    if (!item) return;
+    setLogoUrl(null);
+    const itemType = item.media_type || (item.title ? 'movie' : 'tv');
+    
+    fetchTMDB(`/${itemType}/${item.id}/images?include_image_language=pt,en,null`)
+      .then(data => {
+        if (data && data.logos && data.logos.length > 0) {
+          const ptLogo = data.logos.find(l => l.iso_639_1 === 'pt');
+          const enLogo = data.logos.find(l => l.iso_639_1 === 'en');
+          const chosenLogo = ptLogo || enLogo || data.logos[0];
+          if (chosenLogo) {
+            setLogoUrl(`${IMG_BASE_URL}${chosenLogo.file_path}`);
+          }
+        }
+      })
+      .catch(e => console.error("Erro ao buscar logo do Hero:", e));
+  }, [item]);
+
   if (!item) {
     return (
       <section id="hero" className="relative h-[96vh] min-h-[500px] w-full bg-[#09090b] flex items-center justify-center">
@@ -28,9 +49,17 @@ export default function Hero({ item, onPlay, onInfo }) {
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent"></div>
       
       <div className="relative z-10 w-full px-6 md:px-20 flex flex-col items-start space-y-4 md:w-2/3">
-        <h2 className="text-4xl md:text-6xl font-black text-white leading-tight drop-shadow-2xl line-clamp-2 select-none tracking-tight">
-          {item.title || item.name}
-        </h2>
+        {logoUrl ? (
+          <img 
+            src={logoUrl} 
+            alt={item.title || item.name} 
+            className="max-h-28 md:max-h-40 max-w-[280px] md:max-w-[480px] object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.9)] select-none mb-2 animate-fade-in"
+          />
+        ) : (
+          <h2 className="text-4xl md:text-6xl font-black text-white leading-tight drop-shadow-2xl line-clamp-2 select-none tracking-tight">
+            {item.title || item.name}
+          </h2>
+        )}
         <p className="text-sm md:text-lg text-zinc-300 font-medium leading-relaxed drop-shadow max-w-2xl line-clamp-3 md:line-clamp-4 select-none">
           {item.overview || 'Nenhuma descrição disponível no momento.'}
         </p>

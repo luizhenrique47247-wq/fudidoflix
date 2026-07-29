@@ -24,8 +24,74 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
     };
     window.addEventListener('scroll', handleScroll);
 
-    // Initial notifications check
-    const currentInbox = Storage.getInbox();
+    // Initial 1x Daily notifications check
+    let currentInbox = Storage.getInbox();
+    const todayStr = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const lastNotifDate = localStorage.getItem('fudidoFlixLastNotifDate');
+
+    // On a new calendar day, generate fresh daily notifications once per day!
+    if (lastNotifDate !== todayStr) {
+      Storage.clearInbox();
+      const myList = Storage.getMyList();
+      const defaultNotifications = [
+        {
+          uniqueId: `notif_1_${todayStr}`,
+          id: 634649,
+          type: 'movie',
+          tag: 'Novo Lançamento',
+          badgeColor: 'bg-[#E50914]',
+          title: 'Homem-Aranha: Sem Volta Para Casa',
+          subtitle: 'Filme • Lançamento em Destaque',
+          timeAgo: 'Há 1 hora',
+          image: 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg'
+        },
+        {
+          uniqueId: `notif_2_${todayStr}`,
+          id: 66732,
+          type: 'tv',
+          tag: 'Novo Episódio',
+          badgeColor: 'bg-[#E50914]',
+          title: 'Stranger Things (Nova Temporada)',
+          subtitle: 'Série • Novos episódios disponíveis',
+          timeAgo: 'Há 3 horas',
+          image: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg'
+        },
+        {
+          uniqueId: `notif_3_${todayStr}`,
+          id: 85937,
+          type: 'tv',
+          tag: 'Em Alta #1',
+          badgeColor: 'bg-emerald-600',
+          title: 'Demon Slayer: Kimetsu no Yaiba',
+          subtitle: 'Anime • Destaque no Brasil Hoje',
+          timeAgo: 'Hoje',
+          image: 'https://image.tmdb.org/t/p/w500/39wmItxPhfi1y0f7A32d3ipZ2v.jpg'
+        }
+      ];
+
+      if (myList && myList.length > 0) {
+        myList.slice(0, 2).forEach(item => {
+          if (item && item.id && item.poster_path) {
+            defaultNotifications.unshift({
+              uniqueId: `notif_list_${item.id}_${todayStr}`,
+              id: item.id,
+              type: item.type || item.media_type || (item.title ? 'movie' : 'tv'),
+              tag: 'Da sua Lista',
+              badgeColor: 'bg-blue-600',
+              title: item.title || item.name,
+              subtitle: 'Novo conteúdo disponível na sua lista',
+              timeAgo: 'Hoje',
+              image: `https://image.tmdb.org/t/p/w500${item.poster_path}`
+            });
+          }
+        });
+      }
+
+      defaultNotifications.forEach(n => Storage.saveToInbox(n));
+      localStorage.setItem('fudidoFlixLastNotifDate', todayStr);
+      currentInbox = Storage.getInbox();
+    }
+
     setInbox(currentInbox);
 
     if (currentInbox.length > 0) {
@@ -92,9 +158,15 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
 
   const handleNotificationItemClick = (e, item) => {
     e.preventDefault();
-    Storage.removeFromInbox(item.uniqueId);
-    refreshInbox();
-    openDetails(item.seriesId, item.type === 'new_ep' ? 'tv' : (item.itemType || 'tv'));
+    if (item.uniqueId) {
+      Storage.removeFromInbox(item.uniqueId);
+      refreshInbox();
+    }
+    const mediaId = item.id || item.seriesId;
+    const mediaType = item.type || item.media_type || (item.seriesId ? 'tv' : 'movie');
+    if (openDetails && mediaId) {
+      openDetails(mediaId, mediaType);
+    }
     setNotificationsOpen(false);
   };
 
@@ -198,53 +270,86 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
                 setProfileOpen(false);
                 refreshInbox();
               }}
-              className="p-1 text-zinc-300 hover:text-white transition-colors relative focus:outline-none mt-1"
+              className="p-1.5 text-zinc-300 hover:text-white transition-colors relative focus:outline-none mt-1 group"
               aria-label="Notificações"
             >
-              <Bell className="w-6 h-6 stroke-[2.2]" />
+              <Bell className="w-6 h-6 stroke-[2.2] group-hover:scale-110 transition-transform" />
               {inbox.length > 0 && (
-                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#E50914] border-2 border-zinc-950 rounded-full animate-pulse"></span>
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#E50914] text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg animate-pulse select-none">
+                  {inbox.length}
+                </span>
               )}
             </button>
 
-            {/* Notification drop menu */}
+            {/* Netflix Notification Dropdown Menu */}
             {notificationsOpen && (
-              <div className="absolute top-10 right-0 w-80 bg-zinc-950/95 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden backdrop-blur-md z-50">
-                <div className="flex justify-between items-center p-4 border-b border-zinc-800">
-                  <h4 className="font-bold text-white">Novidades</h4>
+              <div className="absolute top-11 right-0 w-80 md:w-96 bg-[#141414]/98 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl z-50 animate-scale-up">
+                <div className="flex justify-between items-center px-4 py-3 border-b border-zinc-800/80 bg-zinc-950/60">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="font-extrabold text-white text-base tracking-wide">Notificações</h4>
+                    {inbox.length > 0 && (
+                      <span className="bg-[#E50914] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                        {inbox.length}
+                      </span>
+                    )}
+                  </div>
                   {inbox.length > 0 && (
                     <button 
                       onClick={handleClearAllNotifications}
-                      className="text-xs text-zinc-400 hover:text-red-500 font-medium transition-colors"
+                      className="text-xs text-zinc-400 hover:text-red-500 font-semibold transition-colors"
                     >
-                      Limpar Tudo
+                      Marcar todas como lidas
                     </button>
                   )}
                 </div>
-                <ul className="max-h-72 overflow-y-auto divide-y divide-zinc-900">
+
+                <ul className="max-h-80 overflow-y-auto divide-y divide-zinc-900/60 no-scrollbar">
                   {inbox.length === 0 ? (
-                    <li className="p-6 text-center text-sm text-zinc-500 font-medium">Você está em dia!</li>
+                    <li className="p-8 text-center text-sm text-zinc-500 font-semibold flex flex-col items-center justify-center space-y-2">
+                      <Bell className="w-8 h-8 text-zinc-700" />
+                      <span>Sua central de notificações está em dia!</span>
+                    </li>
                   ) : (
                     inbox.map(item => (
-                      <li key={item.uniqueId} className="flex justify-between items-center p-3 hover:bg-zinc-900/50 transition-colors">
-                        <button 
-                          onClick={(e) => handleNotificationItemClick(e, item)}
-                          className="flex-grow text-left text-sm text-zinc-300 hover:text-white truncate font-medium mr-2"
-                        >
-                          {item.type === 'new_ep' && (
-                            <span><strong className="text-[#E50914] font-bold">Novo Ep:</strong> {item.seriesName} (T{item.season} E{item.episode})</span>
-                          )}
-                          {item.type === 'continue_watching' && (
-                            <span><strong className="text-blue-500 font-bold">Continue:</strong> {item.seriesName}</span>
-                          )}
-                          {item.type === 'my_list_reminder' && (
-                            <span><strong className="text-green-500 font-bold">Da lista:</strong> {item.seriesName}</span>
-                          )}
-                        </button>
+                      <li 
+                        key={item.uniqueId} 
+                        onClick={(e) => handleNotificationItemClick(e, item)}
+                        className="flex items-center p-3 hover:bg-zinc-900/80 transition-colors cursor-pointer group relative"
+                      >
+                        {/* Thumbnail */}
+                        {item.image && (
+                          <div className="relative w-16 h-20 md:w-20 md:h-12 rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800/80 flex-shrink-0 mr-3 shadow-md">
+                            <img 
+                              src={item.image} 
+                              alt={item.title} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                          </div>
+                        )}
+
+                        {/* Content Body */}
+                        <div className="flex-1 min-w-0 pr-2">
+                          <div className="flex items-center space-x-1.5 mb-0.5">
+                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded text-white ${item.badgeColor || 'bg-[#E50914]'}`}>
+                              {item.tag || 'Novo'}
+                            </span>
+                            <span className="text-[10px] text-zinc-400 font-medium">{item.timeAgo || 'Hoje'}</span>
+                          </div>
+                          <h5 className="text-xs font-bold text-white leading-tight truncate group-hover:text-[#E50914] transition-colors">
+                            {item.title}
+                          </h5>
+                          <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-medium">
+                            {item.subtitle}
+                          </p>
+                        </div>
+
+                        {/* Clear notification item */}
                         <button 
                           onClick={(e) => handleClearNotification(e, item.uniqueId)}
-                          className="p-1 text-zinc-500 hover:text-red-500 transition-colors"
-                          aria-label="Limpar"
+                          className="p-1 text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remover"
                         >
                           <X className="w-4 h-4" />
                         </button>

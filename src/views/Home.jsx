@@ -65,9 +65,10 @@ export default function Home({ onSelectMedia }) {
       {/* Carousels Rows container */}
       <div className="-mt-20 md:-mt-24 relative z-20 pb-20 space-y-6 md:space-y-8">
         
-        {/* Render "Em Alta Hoje" first */}
+        {/* Render "Top 10 no Brasil Hoje" first */}
         <MediaCarousel
-          title="Em Alta Hoje"
+          title="Top 10 no Brasil Hoje"
+          isTop10={true}
           items={rowsData["Em Alta Hoje"] || []}
           onClickItem={(id, type) => onSelectMedia(id, type, 'info')}
         />

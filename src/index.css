@@ -51,8 +51,7 @@ body::-webkit-scrollbar {
 
 /* Carousel container scrolling */
 .carousel-container {
-    overflow-x: scroll;
-    overflow-y: hidden !important;
+    overflow-x: auto;
     white-space: nowrap;
     -ms-overflow-style: none;
     scrollbar-width: none;

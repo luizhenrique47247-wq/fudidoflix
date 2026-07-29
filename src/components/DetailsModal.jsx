@@ -3,10 +3,11 @@ import { X, Play, Clapperboard, Plus, Check, Eye, Loader2 } from 'lucide-react';
 import { fetchTMDB, IMG_BASE_URL, IMG_POSTER_URL } from '../services/api';
 import * as Storage from '../services/storageService';
 
-export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPlayTrailer, onSelectActor, onSelectGenre }) {
+export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPlayTrailer, onSelectActor, onSelectGenre, onSelectMedia }) {
   const type = rawType === 'anime' ? 'tv' : rawType;
   const [details, setDetails] = useState(null);
   const [credits, setCredits] = useState(null);
+  const [titleLogo, setTitleLogo] = useState(null);
   const [ageRating, setAgeRating] = useState('L');
   const [isInList, setIsInList] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -14,15 +15,35 @@ export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPla
   const [selectedSeason, setSelectedSeason] = useState('');
   const [episodes, setEpisodes] = useState([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+  const [similarItems, setSimilarItems] = useState([]);
+
+  useEffect(() => {
+    const origBody = document.body.style.overflow;
+    const origHtml = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = origBody;
+      document.documentElement.style.overflow = origHtml;
+    };
+  }, []);
 
   useEffect(() => {
     if (!id || !type) return;
 
     const loadData = async () => {
       setLoading(true);
+      setTitleLogo(null);
+      setSimilarItems([]);
       try {
-        const detailsData = await fetchTMDB(`/${type}/${id}`);
-        const creditsData = await fetchTMDB(`/${type}/${id}/credits`);
+        const [detailsData, creditsData, imagesData, similarData] = await Promise.all([
+          fetchTMDB(`/${type}/${id}`),
+          fetchTMDB(`/${type}/${id}/credits`),
+          fetchTMDB(`/${type}/${id}/images?include_image_language=pt,en,null`),
+          fetchTMDB(`/${type}/${id}/similar`)
+        ]);
         
         let certData = null;
         if (type === 'movie') {
@@ -34,6 +55,22 @@ export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPla
         setDetails(detailsData);
         setCredits(creditsData);
         setIsInList(Storage.isItemInMyList(id, type));
+
+        if (similarData && similarData.results?.length > 0) {
+          setSimilarItems(similarData.results.filter(item => item.backdrop_path || item.poster_path).slice(0, 9));
+        } else {
+          const recData = await fetchTMDB(`/${type}/${id}/recommendations`);
+          setSimilarItems((recData?.results || []).filter(item => item.backdrop_path || item.poster_path).slice(0, 9));
+        }
+
+        if (imagesData && imagesData.logos && imagesData.logos.length > 0) {
+          const ptLogo = imagesData.logos.find(l => l.iso_639_1 === 'pt');
+          const enLogo = imagesData.logos.find(l => l.iso_639_1 === 'en');
+          const chosenLogo = ptLogo || enLogo || imagesData.logos[0];
+          if (chosenLogo) {
+            setTitleLogo(`${IMG_BASE_URL}${chosenLogo.file_path}`);
+          }
+        }
 
         let rating = 'L';
         if (certData && certData.results) {
@@ -170,9 +207,17 @@ export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPla
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent"></div>
 
                 <div className="relative z-10 px-6 md:px-12 w-full">
-                  <h3 className="text-2xl md:text-5xl font-black text-white leading-tight drop-shadow-lg tracking-tight select-none mb-4">
-                    {details.title || details.name}
-                  </h3>
+                  {titleLogo ? (
+                    <img 
+                      src={titleLogo} 
+                      alt={details.title || details.name} 
+                      className="max-h-20 md:max-h-32 max-w-[240px] md:max-w-[400px] object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.95)] select-none mb-4 animate-fade-in"
+                    />
+                  ) : (
+                    <h3 className="text-2xl md:text-5xl font-black text-white leading-tight drop-shadow-lg tracking-tight select-none mb-4">
+                      {details.title || details.name}
+                    </h3>
+                  )}
                   
                   <div className="flex flex-wrap items-center gap-3">
                     <button 
@@ -219,7 +264,7 @@ export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPla
                     </span>
                   </div>
 
-                  <p className="text-zinc-300 text-sm md:text-base leading-relaxed mb-6 font-normal">
+                  <p className="text-[#D2D2D2] text-sm md:text-base leading-relaxed mb-6 font-normal">
                     {details.overview || "Sem descrição disponível."}
                   </p>
                 </div>
@@ -327,6 +372,73 @@ export default function DetailsModal({ id, type: rawType, onClose, onPlay, onPla
                       })}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Títulos Semelhantes (Netflix Recommendations Grid) */}
+              {similarItems.length > 0 && (
+                <div className="p-6 md:p-12 border-t border-zinc-800/60 bg-zinc-950/80">
+                  <h4 className="text-xl md:text-2xl font-black text-white mb-6 tracking-tight">
+                    Títulos Semelhantes
+                  </h4>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+                    {similarItems.map(item => {
+                      const itemYear = (item.release_date || item.first_air_date || '2026').substring(0, 4);
+                      const itemRelevance = Math.round((item.vote_average || 8.2) * 10);
+                      const bgPath = item.backdrop_path || item.poster_path;
+
+                      return (
+                        <div 
+                          key={item.id}
+                          onClick={() => {
+                            if (onSelectMedia) {
+                              onSelectMedia(item.id, type);
+                            }
+                          }}
+                          className="bg-[#181818] border border-zinc-800/80 rounded-xl overflow-hidden shadow-lg hover:border-zinc-700/80 transition-all cursor-pointer group flex flex-col justify-between"
+                        >
+                          {/* Top Backdrop Image */}
+                          <div className="relative w-full aspect-[16/9] bg-zinc-950 overflow-hidden">
+                            {bgPath && (
+                              <img 
+                                src={`${IMG_BASE_URL}${bgPath}`} 
+                                alt={item.title || item.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                              />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent"></div>
+                            
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                              <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
+                                <Play className="w-5 h-5 fill-black ml-0.5" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Info Body */}
+                          <div className="p-3 md:p-4 space-y-2 flex-1 flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center space-x-2 text-[11px] md:text-xs font-bold mb-1">
+                                <span className="text-emerald-400 font-extrabold">{itemRelevance}% Relevante</span>
+                                <span className="border border-zinc-700 text-zinc-400 px-1 py-0.5 rounded text-[9px]">HD</span>
+                                <span className="text-zinc-400 font-semibold">{itemYear}</span>
+                              </div>
+
+                              <h5 className="font-extrabold text-white text-sm md:text-base leading-snug line-clamp-1 group-hover:text-[#E50914] transition-colors">
+                                {item.title || item.name}
+                              </h5>
+
+                              <p className="text-zinc-400 text-xs line-clamp-3 mt-1.5 leading-relaxed font-normal">
+                                {item.overview || "Sem sinopse disponível."}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </>

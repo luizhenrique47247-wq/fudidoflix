@@ -5,6 +5,7 @@ import PlayerModal from './components/PlayerModal';
 import Login from './views/Login';
 import Home from './views/Home';
 import Browse from './views/Browse';
+import CategoryPage from './views/CategoryPage';
 import MinhaLista from './views/MinhaLista';
 import Historico from './views/Historico';
 import AoVivo from './views/AoVivo';
@@ -324,10 +325,16 @@ export default function App() {
         )}
 
         {(activeTab === 'tv' || activeTab === 'movie' || activeTab === 'anime') && (
-          <Browse 
+          <CategoryPage 
             type={activeTab}
             title={activeTab === 'tv' ? 'Séries' : (activeTab === 'movie' ? 'Filmes' : 'Animes')}
-            onSelectMedia={(id, type) => setDetailsMedia({ id, type: type === 'anime' ? 'tv' : type })}
+            onSelectMedia={(id, type, mode, data) => {
+              if (mode === 'play') {
+                handlePlayMedia(id, type, null, null, data);
+              } else {
+                setDetailsMedia({ id, type: type === 'anime' ? 'tv' : type });
+              }
+            }}
           />
         )}
 

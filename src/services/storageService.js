@@ -376,3 +376,59 @@ export function setLastCheck() {
         console.error("Erro ao salvar data da última verificação:", error);
     }
 }
+
+// ==========================================================
+//  INDICAÇÕES DO AMOR (Love Recommendations)
+// ==========================================================
+const LOVE_RECS_KEY = 'fudidoFlixLoveRecommendations';
+
+export function getLoveRecommendations() {
+    try {
+        const json = localStorage.getItem(LOVE_RECS_KEY);
+        return json ? JSON.parse(json) : [];
+    } catch (error) {
+        console.error("Erro ao ler Indicações do Amor:", error);
+        return [];
+    }
+}
+
+export function saveLoveRecommendation(item, message = '', senderName = 'Meu amor', targetProfileName = 'Todos') {
+    try {
+        const current = getLoveRecommendations();
+        const newRec = {
+            id: 'love_' + Date.now(),
+            item: {
+                id: item.id,
+                title: item.title || item.name,
+                poster_path: item.poster_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date || item.first_air_date,
+                media_type: item.media_type || (item.title ? 'movie' : 'tv'),
+                overview: item.overview
+            },
+            message: message || '❤️ Essa indicação é especial para você!',
+            senderName,
+            targetProfileName,
+            createdAt: new Date().toLocaleDateString('pt-BR')
+        };
+        current.unshift(newRec);
+        localStorage.setItem(LOVE_RECS_KEY, JSON.stringify(current));
+        return newRec;
+    } catch (error) {
+        console.error("Erro ao salvar Indicação do Amor:", error);
+        return null;
+    }
+}
+
+export function deleteLoveRecommendation(id) {
+    try {
+        let current = getLoveRecommendations();
+        current = current.filter(r => r.id !== id);
+        localStorage.setItem(LOVE_RECS_KEY, JSON.stringify(current));
+        return current;
+    } catch (error) {
+        console.error("Erro ao excluir Indicação do Amor:", error);
+        return [];
+    }
+}
+

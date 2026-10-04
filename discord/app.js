@@ -571,17 +571,7 @@ function togglePinSwap(target) {
   }
 }
 
-  // Garantir que as streams de vídeo continuem reproduzindo após mover nós no DOM
-  if (elements.screenShareVideo && elements.screenShareVideo.srcObject) {
-    elements.screenShareVideo.play().catch(() => {});
-  }
-  if (elements.localVideo && elements.localVideo.srcObject) {
-    elements.localVideo.play().catch(() => {});
-  }
-  if (elements.remoteVideo && elements.remoteVideo.srcObject) {
-    elements.remoteVideo.play().catch(() => {});
-  }
-}
+
 
 // --- ACORDAR: Alarme local + enviar para o parceiro ---
 function triggerWakeAlarm() {

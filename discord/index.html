@@ -1,40 +1,459 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 127.14 96.36' fill='%235865f2'><path d='M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z'/></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Discord Web P2P — Call & Compartilhamento de Tela</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=gg+sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'gg sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background-color: #1e1f22;
-        color: #dbdee1;
-        overflow: hidden;
-      }
-      /* Custom Discord-like scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #2b2d31;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #1a1b1e;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #111214;
-      }
-    </style>
-    <script type="module" crossorigin src="./assets/index-BYl-c3S3.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CVTKuDB9.css">
-  </head>
-  <body class="select-none bg-[#1e1f22] text-[#dbdee1]">
-    <div id="root"></div>
-  </body>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍿 Cine Amor - Sessão de Cinema a Dois</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="movie-night-theme">
+
+  <!-- Fundo Sunburst Retrô -->
+  <div class="sunburst-bg"></div>
+  <div class="stage-spotlight"></div>
+
+  <!-- Partículas Flutuantes Douradas -->
+  <div class="floating-particles">
+    <div class="particle p1"></div>
+    <div class="particle p2"></div>
+    <div class="particle p3"></div>
+    <div class="particle p4"></div>
+    <div class="particle p5"></div>
+    <div class="particle p6"></div>
+    <div class="particle p7"></div>
+    <div class="particle p8"></div>
+    <div class="particle p9"></div>
+    <div class="particle p10"></div>
+    <div class="particle p11"></div>
+    <div class="particle p12"></div>
+  </div>
+
+  <!-- Cortinas de Veludo (Topo com Sanefa Drapeada e Não-Intrusiva) -->
+  <div class="curtain-top-swag">
+    <div class="swag-drape"></div>
+    <!-- Estrelas Douradas SVG Penduradas em TODA a Extensão do Topo -->
+    <div class="hanging-stars-row">
+      <div class="star-string s1"><svg class="star-svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FDE047" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s2"><svg class="star-svg sparkle" width="13" height="13" viewBox="0 0 24 24"><path d="M12 0C12 7 7 12 0 12C7 12 12 17 12 24C12 17 17 12 24 12C17 12 12 7 12 0Z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s3"><svg class="star-svg" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FEF08A" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s4"><svg class="star-svg" width="12" height="12" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s5"><svg class="star-svg sparkle" width="15" height="15" viewBox="0 0 24 24"><path d="M12 0C12 7 7 12 0 12C7 12 12 17 12 24C12 17 17 12 24 12C17 12 12 7 12 0Z" fill="#FDE047" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s6"><svg class="star-svg" width="14" height="14" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s7"><svg class="star-svg" width="17" height="17" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FEF08A" stroke="#EAB308" stroke-width="0.5"/></svg></div>
+      <div class="star-string s8"><svg class="star-svg sparkle" width="12" height="12" viewBox="0 0 24 24"><path d="M12 0C12 7 7 12 0 12C7 12 12 17 12 24C12 17 17 12 24 12C17 12 12 7 12 0Z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s9"><svg class="star-svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FDE047" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s10"><svg class="star-svg" width="13" height="13" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s11"><svg class="star-svg sparkle" width="18" height="18" viewBox="0 0 24 24"><path d="M12 0C12 7 7 12 0 12C7 12 12 17 12 24C12 17 17 12 24 12C17 12 12 7 12 0Z" fill="#FEF08A" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s12"><svg class="star-svg" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FDE047" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s13"><svg class="star-svg" width="19" height="19" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FEF08A" stroke="#EAB308" stroke-width="0.5"/></svg></div>
+      <div class="star-string s14"><svg class="star-svg sparkle" width="14" height="14" viewBox="0 0 24 24"><path d="M12 0C12 7 7 12 0 12C7 12 12 17 12 24C12 17 17 12 24 12C17 12 12 7 12 0Z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s15"><svg class="star-svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FDE047" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s16"><svg class="star-svg" width="13" height="13" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s17"><svg class="star-svg sparkle" width="17" height="17" viewBox="0 0 24 24"><path d="M12 0C12 7 7 12 0 12C7 12 12 17 12 24C12 17 17 12 24 12C17 12 12 7 12 0Z" fill="#FEF08A" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s18"><svg class="star-svg" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FDE047" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s19"><svg class="star-svg" width="12" height="12" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s20"><svg class="star-svg sparkle" width="16" height="16" viewBox="0 0 24 24"><path d="M12 0C12 7 7 12 0 12C7 12 12 17 12 24C12 17 17 12 24 12C17 12 12 7 12 0Z" fill="#FEF08A" stroke="#EAB308" stroke-width="0.5"/></svg></div>
+      <div class="star-string s21"><svg class="star-svg" width="14" height="14" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s22"><svg class="star-svg" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FDE047" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s23"><svg class="star-svg sparkle" width="13" height="13" viewBox="0 0 24 24"><path d="M12 0C12 7 7 12 0 12C7 12 12 17 12 24C12 17 17 12 24 12C17 12 12 7 12 0Z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s24"><svg class="star-svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FEF08A" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+      <div class="star-string s25"><svg class="star-svg" width="13" height="13" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/></svg></div>
+      <div class="star-string s26"><svg class="star-svg" width="17" height="17" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FDE047" stroke="#F59E0B" stroke-width="0.5"/></svg></div>
+    </div>
+  </div>
+
+  <!-- Cortinas Laterais Decorativas com Fitas de Filme -->
+  <div class="curtain-side curtain-left" id="curtainLeft">
+    <div class="film-strip-deco"></div>
+  </div>
+  <div class="curtain-side curtain-right" id="curtainRight">
+    <div class="film-strip-deco"></div>
+  </div>
+
+  <!-- Layout Principal do Cinema -->
+  <div class="theater-wrapper">
+    
+
+
+    <!-- Auditório Central -->
+    <main class="theater-core">
+      
+      <!-- 1. LOBBY -->
+      <section class="movie-night-lobby" id="lobbySection">
+        <div class="lobby-stage-poster">
+          
+          <!-- Elementos de Cinema Animados -->
+          <div class="cinema-props-row">
+            <!-- Claquete -->
+            <div class="prop-item clapper-prop">
+              <svg class="clapper-svg" width="60" height="52" viewBox="0 0 64 56">
+                <rect x="4" y="20" width="56" height="32" rx="4" fill="#18181B" stroke="#F43F5E" stroke-width="2"/>
+                <line x1="4" y1="36" x2="60" y2="36" stroke="#3F3F46" stroke-width="1.5"/>
+                <text x="10" y="30" fill="#E4E4E7" font-size="7" font-weight="bold">CENA</text>
+                <text x="32" y="30" fill="#E4E4E7" font-size="7" font-weight="bold">TOMADA</text>
+                <text x="14" y="47" fill="#F43F5E" font-size="9" font-weight="900">AMOR</text>
+                <text x="40" y="47" fill="#F59E0B" font-size="9" font-weight="900">01</text>
+                <g class="clapper-arm">
+                  <rect x="4" y="8" width="56" height="12" rx="2" fill="#18181B" stroke="#F43F5E" stroke-width="1.5"/>
+                  <path d="M12 8L20 20H14L6 8H12Z" fill="#FFF"/>
+                  <path d="M26 8L34 20H28L20 8H26Z" fill="#FFF"/>
+                  <path d="M40 8L48 20H42L34 8H40Z" fill="#FFF"/>
+                  <path d="M54 8L60 17V8H54Z" fill="#FFF"/>
+                </g>
+              </svg>
+            </div>
+
+            <!-- Pipoca -->
+            <div class="prop-item popcorn-prop">
+              <div class="popcorn-floating-wrapper">
+                <svg width="44" height="52" viewBox="0 0 64 76" fill="none">
+                  <path d="M16 30L20 70H44L48 30H16Z" fill="#E11D48"/>
+                  <path d="M22 30L24 70H28L26 30H22Z" fill="#FFF" opacity="0.3"/>
+                  <path d="M36 30L36 70H40L40 30H36Z" fill="#FFF" opacity="0.3"/>
+                  <circle cx="20" cy="22" r="8" fill="#FDE68A"/>
+                  <circle cx="32" cy="18" r="9" fill="#FEF3C7"/>
+                  <circle cx="44" cy="22" r="8" fill="#FDE68A"/>
+                  <circle cx="26" cy="14" r="7" fill="#FEF9C3"/>
+                  <circle cx="38" cy="12" r="7" fill="#FDE68A"/>
+                  <circle cx="32" cy="8" r="6" fill="#FEF3C7"/>
+                  <ellipse cx="32" cy="38" rx="4" ry="2" fill="#FFF" opacity="0.15"/>
+                  <text x="20" y="54" fill="#FFF" font-size="8" font-weight="900">POP</text>
+                  <text x="18" y="64" fill="#FFF" font-size="8" font-weight="900">CORN</text>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Rolo de Filme -->
+            <div class="prop-item reel-prop">
+              <svg class="spinning-reel-svg" width="56" height="56" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#27272A" stroke="#E4E4E7" stroke-width="3"/>
+                <circle cx="32" cy="32" r="10" fill="#18181B" stroke="#A1A1AA" stroke-width="2"/>
+                <circle cx="32" cy="14" r="5" fill="#18181B"/>
+                <circle cx="32" cy="50" r="5" fill="#18181B"/>
+                <circle cx="14" cy="32" r="5" fill="#18181B"/>
+                <circle cx="50" cy="32" r="5" fill="#18181B"/>
+                <circle cx="19" cy="19" r="4" fill="#18181B"/>
+                <circle cx="45" cy="45" r="4" fill="#18181B"/>
+                <circle cx="45" cy="19" r="4" fill="#18181B"/>
+                <circle cx="19" cy="45" r="4" fill="#18181B"/>
+              </svg>
+            </div>
+
+            <!-- Óculos 3D -->
+            <div class="prop-item glasses-prop">
+              <svg width="50" height="26" viewBox="0 0 64 34">
+                <rect x="4" y="6" width="24" height="22" rx="3" fill="#0284C7" stroke="#FFF" stroke-width="2"/>
+                <rect x="36" y="6" width="24" height="22" rx="3" fill="#E11D48" stroke="#FFF" stroke-width="2"/>
+                <path d="M28 12C31 8 33 8 36 12" stroke="#FFF" stroke-width="3" fill="none"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Letreiro Luminoso Central -->
+          <div class="marquee-sign-box">
+            <div class="marquee-bulbs-border">
+              <span class="bulb b1"></span><span class="bulb b2"></span><span class="bulb b3"></span>
+              <span class="bulb b4"></span><span class="bulb b5"></span><span class="bulb b6"></span>
+              <span class="bulb b7"></span><span class="bulb b8"></span><span class="bulb b9"></span>
+              <span class="bulb b10"></span><span class="bulb b11"></span><span class="bulb b12"></span>
+              <span class="bulb b13"></span><span class="bulb b14"></span><span class="bulb b15"></span>
+              <span class="bulb b16"></span>
+            </div>
+            <div class="sign-inner">
+              <h2 class="sign-neon-text">NOITE DE FILME</h2>
+              <span class="sign-tagline">SESSÃO DE CINEMA & SÉRIES A DOIS</span>
+            </div>
+          </div>
+
+          <!-- Poltronas VIP -->
+          <div class="cinema-seats-area">
+            <!-- Poltrona 1 -->
+            <div class="theater-chair me">
+              <div class="chair-backrest">
+                <div class="chair-avatar" id="lobbyMyAvatar">U1</div>
+                <div class="chair-lamp online"></div>
+              </div>
+              <span class="chair-user-title" id="lobbyMyName">Usuário 1</span>
+              <span class="chair-number">POLTRONA 01</span>
+            </div>
+
+            <!-- Coração SVG Pulsante -->
+            <div class="seats-love-center">
+              <svg class="heart-svg-icon" width="36" height="36" viewBox="0 0 24 24">
+                <defs>
+                  <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#F43F5E;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#E11D48;stop-opacity:1" />
+                  </linearGradient>
+                </defs>
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="url(#heartGrad)" stroke="#FB7185" stroke-width="0.5"/>
+              </svg>
+              <span class="vip-duo-tag">CASAL VIP</span>
+            </div>
+
+            <!-- Poltrona 2 -->
+            <div class="theater-chair her">
+              <div class="chair-backrest">
+                <div class="chair-avatar partner" id="lobbyHerAvatar">U2</div>
+                <div class="chair-lamp waiting" id="herStatusDot"></div>
+              </div>
+              <span class="chair-user-title" id="lobbyHerName">Usuário 2</span>
+              <span class="chair-number">POLTRONA 02</span>
+            </div>
+          </div>
+
+          <!-- Botões de Ingresso -->
+          <div class="enter-stage-actions">
+            <button class="grand-ticket-btn" id="enterCallBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 100 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 100-4V7a2 2 0 00-2-2H5z"/></svg>
+              <span>OCUPAR POLTRONA & ENTRAR</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 100 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 100-4V7a2 2 0 00-2-2H5z"/></svg>
+            </button>
+            <button class="ticket-link-btn" id="lobbyCopyBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 100 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 100-4V7a2 2 0 00-2-2H5z"/></svg>
+              Copiar Ingresso para Enviar
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 2. AUDITÓRIO ATIVO -->
+      <section class="active-movie-theater" id="callGrid" style="display: none;">
+        
+        <div class="cinema-stage-row">
+          <!-- Slot Principal da Telona (Esquerda) -->
+          <div class="main-stage-slot" id="mainStageSlot">
+            <!-- Telona de Cinema (Posicionada na esquerda) -->
+            <div class="giant-projection-screen" id="mainCinemaScreen">
+              <video id="screenShareVideo" autoplay playsinline></video>
+
+              <!-- Standby do Projetor -->
+              <div class="retro-standby" id="projectorStandby">
+                <div class="spinning-film-reel">
+                  <svg width="88" height="88" viewBox="0 0 64 64" class="reel-spin-anim">
+                    <circle cx="32" cy="32" r="30" fill="#18181B" stroke="#F59E0B" stroke-width="3"/>
+                    <circle cx="32" cy="32" r="14" fill="#09090B" stroke="#FDE047" stroke-width="2"/>
+                    <circle cx="32" cy="11" r="4.5" fill="#09090B"/>
+                    <circle cx="32" cy="53" r="4.5" fill="#09090B"/>
+                    <circle cx="11" cy="32" r="4.5" fill="#09090B"/>
+                    <circle cx="53" cy="32" r="4.5" fill="#09090B"/>
+                    <circle cx="17" cy="17" r="4" fill="#09090B"/>
+                    <circle cx="47" cy="47" r="4" fill="#09090B"/>
+                    <circle cx="47" cy="17" r="4" fill="#09090B"/>
+                    <circle cx="17" cy="47" r="4" fill="#09090B"/>
+                  </svg>
+                  <!-- Câmera de Cinema no Centro do Círculo -->
+                  <div class="center-camera-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <circle cx="7" cy="5" r="2.2" fill="#F59E0B" stroke="#FDE047" stroke-width="1.2"/>
+                      <circle cx="12" cy="5" r="2.2" fill="#F59E0B" stroke="#FDE047" stroke-width="1.2"/>
+                      <rect x="3" y="7" width="13" height="11" rx="2" fill="#18181B" stroke="#FBBF24" stroke-width="1.5"/>
+                      <polygon points="16,10 22,7 22,17 16,14" fill="#F59E0B" stroke="#FDE047" stroke-width="1.2"/>
+                      <circle cx="8" cy="12.5" r="2.5" fill="#09090B" stroke="#FDE047" stroke-width="1"/>
+                      <circle cx="7.5" cy="12" r="0.8" fill="#FFF"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="standby-desc">
+                  <h3>TELONA PRONTA PARA O FILME</h3>
+                  <p>Clique abaixo para transmitir a aba da Netflix / série com som de cinema estéreo.</p>
+                  <button class="project-movie-cta" id="standbyScreenShareBtn">
+                    <span>🍿 Iniciar Projeção (Transmitir Filme)</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Controles Flutuantes de Tela Cheia (Apenas o símbolo no canto inferior direito) -->
+              <div class="screen-overlay-controls" id="screenOverlayControls">
+                <button class="screen-overlay-btn" id="screenFullscreenBtn" title="Tela Cheia">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                  </svg>
+                </button>
+                <button class="screen-overlay-btn exit-fs-btn" id="screenExitFullscreenBtn" title="Sair da Tela Cheia" style="display:none;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M4 14h6v6m10-10h-6V4m0 6l7-7M3 21l7-7"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Ambilight -->
+              <div class="screen-ambilight"></div>
+            </div>
+          </div>
+
+          <!-- Barra Lateral na Direita ao lado da Telona (Câmeras + Timer em baixo) -->
+          <div class="right-audience-sidebar" id="audienceSidebar">
+            
+            <!-- Slot Usuário Local -->
+            <div class="side-user-slot" id="localSlot">
+              <div class="compact-camera-card" id="localTile" title="Clique para alternar com a telona principal">
+                <div class="cam-lens-wrap">
+                  <video id="localVideo" autoplay playsinline muted></video>
+                  <div class="cam-avatar-bg" id="localAvatarPlaceholder">
+                    <div class="compact-avatar" id="localBigAvatar">U1</div>
+                  </div>
+                </div>
+                <div class="emerald-neon-ring"></div>
+                <div class="cam-badge-tag">
+                  <span class="badge-role" id="localMetaName">U1 (Você)</span>
+                  <span class="badge-muted" id="localMutedBadge" style="display: none;">🔇</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slot Usuário Remoto (SÓ APARECE SE REALMENTE ESTIVER NA CALL!) -->
+            <div class="side-user-slot" id="remoteSlot">
+              <div class="compact-camera-card" id="remoteCamSlot" title="Clique para alternar com a telona principal" style="display: none;">
+                <div class="cam-lens-wrap">
+                  <video id="remoteVideo" autoplay playsinline></video>
+                  <div class="cam-avatar-bg" id="remoteAvatarPlaceholder">
+                    <div class="compact-avatar partner" id="remoteBigAvatar">U2</div>
+                  </div>
+                </div>
+                <div class="emerald-neon-ring" id="remoteSpeakingNeon"></div>
+                <div class="cam-badge-tag">
+                  <span class="badge-role" id="remoteMetaName">U2</span>
+                  <span class="badge-muted" id="remoteMutedBadge" style="display: none;">🔇</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timer de Sessão em baixo dos Usuários -->
+            <div class="side-call-timer" id="callTimerBadge" style="display: none;">
+              <div class="timer-led-indicator"></div>
+              <div class="timer-text-content">
+                <span class="timer-mini-tag">TEMPO DE SESSÃO</span>
+                <span class="timer-digits" id="callTimerDigits">00:00:00</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Console de Controle (Dentro do callGrid: visível em modo normal e em Tela Cheia com auto-hide no mouse idle) -->
+        <footer class="vintage-cinema-dock" id="dockContainer" style="display: none;">
+          <div class="dock-brass-panel">
+            
+            <!-- Câmera -->
+            <button class="dock-action-key" id="toggleCameraBtn" title="Ligar/Desligar Câmera">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 7l-7 5 7 5V7z"></path>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+              </svg>
+              <span class="key-label">Câmera</span>
+            </button>
+
+            <!-- Projetar Filme -->
+            <button class="dock-action-key gold-highlight-key" id="toggleScreenBtn" title="Transmitir Filme/Série">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <span class="key-label">Projetar Filme</span>
+            </button>
+
+            <!-- Microfone -->
+            <button class="dock-action-key" id="toggleMicBtn" title="Microfone">
+              <svg id="micIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              <span class="key-label">Microfone</span>
+            </button>
+
+            <!-- Som -->
+            <button class="dock-action-key" id="toggleDeafenBtn" title="Som">
+              <svg id="deafenIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 102-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+              </svg>
+              <span class="key-label">Som</span>
+            </button>
+
+            <div class="dock-separator"></div>
+
+            <!-- ACORDAR (Alarme!) -->
+            <button class="dock-action-key alarm-wake-key" id="wakeUpBtn" title="Acordar o Parceiro!">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                <line x1="12" y1="2" x2="12" y2="4"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <span class="key-label">ACORDAR!</span>
+            </button>
+
+            <div class="dock-separator"></div>
+
+            <!-- Sair -->
+            <button class="dock-action-key exit-session-key" id="disconnectBtn" title="Sair da Sala">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-6-6 19.86 19.86 0 0 1-3.09-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path>
+                <line x1="23" y1="1" x2="1" y2="23"></line>
+              </svg>
+              <span class="key-label">Sair</span>
+            </button>
+
+          </div>
+        </footer>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Modal de Perfil -->
+  <div class="cinema-modal-backdrop" id="profileModal" style="display: none;">
+    <div class="ticket-modal-card">
+      <div class="ticket-modal-header">
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 100 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 100-4V7a2 2 0 00-2-2H5z"/></svg> Personalizar Ingresso</h3>
+        <button class="modal-close-cross" id="closeProfileModal">&times;</button>
+      </div>
+      <div class="ticket-modal-body">
+        <div class="modal-input-group">
+          <label for="usernameInput">Apelido Opcional (Padrão: Usuário 1 / 2)</label>
+          <input type="text" id="usernameInput" maxlength="32" placeholder="Deixe em branco para Usuário 1 / 2">
+        </div>
+        <div class="modal-input-group">
+          <label for="avatarUrlInput">Foto de Perfil (Link da Imagem)</label>
+          <input type="url" id="avatarUrlInput" placeholder="https://exemplo.com/sua-foto.png">
+        </div>
+        <div class="modal-input-group">
+          <label>Cor da Poltrona</label>
+          <div class="color-dots-palette" id="colorPickerGrid">
+            <div class="color-circle active" data-color="#7c3aed" style="background: #7c3aed;"></div>
+            <div class="color-circle" data-color="#e11d48" style="background: #e11d48;"></div>
+            <div class="color-circle" data-color="#f59e0b" style="background: #f59e0b;"></div>
+            <div class="color-circle" data-color="#10b981" style="background: #10b981;"></div>
+            <div class="color-circle" data-color="#0284c7" style="background: #0284c7;"></div>
+          </div>
+        </div>
+        <div class="modal-input-group">
+          <label for="roomNameInput">Código da Sala Privada</label>
+          <input type="text" id="roomNameInput" placeholder="meu-coracao">
+        </div>
+      </div>
+      <div class="ticket-modal-footer">
+        <button class="modal-cancel-btn" id="cancelProfileBtn">Cancelar</button>
+        <button class="modal-confirm-btn" id="saveProfileBtn">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="cinema-toast" id="toast">Ingresso copiado!</div>
+
+  <script type="module" src="app.js"></script>
+</body>
 </html>

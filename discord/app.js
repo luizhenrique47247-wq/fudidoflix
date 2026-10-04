@@ -798,10 +798,10 @@ async function joinCall() {
       elements.remoteCamSlot.style.display = 'none';
     }
 
-    state.room.onPeerJoin(peerId => {
+    state.room.onPeerJoin(async peerId => {
       const currentPeers = Object.keys(state.peers);
-      // REGRA: Apenas 2 usuários permitidos na call. Se já existe 1 parceiro, rejeita o 3º!
-      if (currentPeers.length >= 1) {
+      // REGRA: Apenas 2 usuários permitidos na call. Se já existe 1 parceiro diferente, rejeita o 3º!
+      if (currentPeers.length >= 1 && !state.peers[peerId]) {
         console.warn('Tentativa de 3º usuário rejeitada:', peerId);
         sendRoomFull({ reason: 'full' }, peerId);
         return;
@@ -810,24 +810,41 @@ async function joinCall() {
       console.log('Parceiro conectou:', peerId);
       playSfx('join');
 
-      state.peers[peerId] = {
-        name: 'Usuário 2',
-        color: '#e11d48',
-        avatarUrl: '',
-        isMuted: false,
-        isCameraOn: false,
-        isSharingScreen: false
-      };
+      if (!state.peers[peerId]) {
+        state.peers[peerId] = {
+          name: 'Usuário 2',
+          color: '#e11d48',
+          avatarUrl: '',
+          isMuted: false,
+          isCameraOn: false,
+          isSharingScreen: false,
+          streamAdded: false
+        };
+      }
 
       // O OUTRO USUÁRIO SÓ APARECE LA SE REALMENTE TIVER NA CALL
       if (elements.remoteCamSlot) {
         elements.remoteCamSlot.style.display = 'block';
       }
 
-      state.room.addStream(state.localStream, peerId, { type: 'mic' });
-      if (state.screenStream) {
-        state.room.addStream(state.screenStream, peerId, { type: 'screen' });
+      // Envia áudio local apenas se ainda não foi adicionado para este peer
+      if (!state.peers[peerId].streamAdded && state.localStream) {
+        state.peers[peerId].streamAdded = true;
+        try {
+          await state.room.addStream(state.localStream, peerId, { type: 'mic' });
+        } catch (err) {
+          console.warn('Aviso ao sincronizar áudio com parceiro:', err?.message || err);
+        }
       }
+
+      if (state.screenStream) {
+        try {
+          await state.room.addStream(state.screenStream, peerId, { type: 'screen' });
+        } catch (err) {
+          console.warn('Aviso ao sincronizar transmissão de tela:', err?.message || err);
+        }
+      }
+
       broadcastPresence();
       resolveUserRoles();
     });
@@ -1114,8 +1131,15 @@ async function toggleCamera() {
 
   if (state.isCameraOn) {
     playSfx('camera_off');
-    const videoTrack = state.localStream.getVideoTracks()[0];
+    const videoTrack = state.localStream?.getVideoTracks()[0];
     if (videoTrack) {
+      if (state.room) {
+        try {
+          state.room.removeTrack(videoTrack, state.localStream);
+        } catch (e) {
+          console.warn('Erro ao remover track de vídeo:', e);
+        }
+      }
       videoTrack.stop();
       state.localStream.removeTrack(videoTrack);
     }
@@ -1136,7 +1160,11 @@ async function toggleCamera() {
       state.isCameraOn = true;
 
       if (state.room) {
-        state.room.addStream(state.localStream);
+        try {
+          await state.room.addTrack(videoTrack, state.localStream);
+        } catch (e) {
+          console.warn('Aviso ao sincronizar track de vídeo:', e);
+        }
       }
     } catch (err) {
       alert('Não foi possível acessar a câmera.');
@@ -1174,7 +1202,11 @@ async function toggleScreenShare() {
       elements.screenShareVideo.srcObject = state.screenStream;
 
       if (state.room) {
-        state.room.addStream(state.screenStream, null, { type: 'screen' });
+        try {
+          await state.room.addStream(state.screenStream, null, { type: 'screen' });
+        } catch (err) {
+          console.warn('Aviso ao transmitir tela:', err);
+        }
       }
 
       state.screenStream.getVideoTracks()[0].onended = () => {
@@ -1192,10 +1224,14 @@ async function toggleScreenShare() {
 function stopScreenShare() {
   if (state.screenStream) {
     playSfx('screen_off');
-    state.screenStream.getTracks().forEach(t => t.stop());
     if (state.room) {
-      state.room.removeStream(state.screenStream);
+      try {
+        state.room.removeStream(state.screenStream);
+      } catch (e) {
+        console.warn('Aviso ao remover transmissão de tela:', e);
+      }
     }
+    state.screenStream.getTracks().forEach(t => t.stop());
     state.screenStream = null;
   }
 

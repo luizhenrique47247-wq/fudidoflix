@@ -37,7 +37,20 @@ const state = {
 };
 
 const TRYSTERO_CONFIG = {
-  appId: 'cine-amor-p2p-vip'
+  appId: 'cine-amor-p2p-vip',
+  relayUrls: [
+    'wss://relay.damus.io',
+    'wss://nos.lol',
+    'wss://relay.primal.net',
+    'wss://nostr.mom',
+    'wss://nostr.bitcoiner.social',
+    'wss://nostr.oxtr.dev'
+  ],
+  rtcConfig: {
+    iceServers: [
+      { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+    ]
+  }
 };
 
 // --- Efeitos Sonoros (Web Audio API) ---

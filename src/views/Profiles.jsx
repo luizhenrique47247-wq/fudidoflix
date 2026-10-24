@@ -62,7 +62,7 @@ export default function Profiles({ onSelectProfile }) {
         }
         return p;
       });
-      localStorage.setItem('fudidoFlixProfiles', JSON.stringify(updatedProfiles));
+      Storage.updateProfile(editingProfile.id, newProfileName.trim(), selectedAvatar);
       setProfiles(updatedProfiles);
     } else {
       // Create new profile with selected avatar

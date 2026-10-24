@@ -48,7 +48,22 @@ const TRYSTERO_CONFIG = {
   ],
   rtcConfig: {
     iceServers: [
-      { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+      { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
     ]
   }
 };
@@ -411,6 +426,15 @@ function init() {
   elements.toggleCameraBtn.addEventListener('click', toggleCamera);
   elements.toggleScreenBtn.addEventListener('click', toggleScreenShare);
   elements.standbyScreenShareBtn.addEventListener('click', toggleScreenShare);
+
+  const movieVolumeSlider = document.getElementById('movieVolumeSlider');
+  if (movieVolumeSlider) {
+    movieVolumeSlider.addEventListener('input', (e) => {
+      if (elements.screenShareVideo) {
+        elements.screenShareVideo.volume = parseFloat(e.target.value);
+      }
+    });
+  }
 
   // ACORDAR!
   elements.wakeUpBtn.addEventListener('click', () => {
@@ -873,9 +897,16 @@ async function joinCall() {
       handleRemoteStream(stream, peerId, metadata);
     });
 
+    state.room.onPeerTrack((track, stream, peerId, metadata) => {
+      handleRemoteStream(stream, peerId, metadata);
+    });
+
     onPresence((data, peerId) => {
       if (!state.peers[peerId]) state.peers[peerId] = {};
       state.peers[peerId] = { ...state.peers[peerId], ...data };
+      if (data.isCameraOn === false) {
+        elements.remoteAvatarPlaceholder.style.display = 'flex';
+      }
       resolveUserRoles();
     });
 
@@ -1072,6 +1103,7 @@ function handleRemoteStream(stream, peerId, metadata) {
   if (metadata && metadata.type === 'screen') {
     elements.mainCinemaScreen.classList.add('live');
     elements.screenShareVideo.srcObject = stream;
+    elements.screenShareVideo.muted = false; // Ouvinte escuta o som do filme em alto e bom som
     elements.screenShareVideo.play().catch(e => console.warn(e));
     showToast('🍿 O filme começou na telona!');
     return;
@@ -1080,10 +1112,12 @@ function handleRemoteStream(stream, peerId, metadata) {
   state.peers[peerId].stream = stream;
   const hasVideo = stream.getVideoTracks().length > 0;
 
+  // CRÍTICO: Sempre anexa o stream para que o áudio do microfone toque sem falhas!
+  elements.remoteVideo.srcObject = stream;
+  elements.remoteVideo.play().catch(e => console.warn(e));
+
   if (hasVideo) {
     elements.remoteAvatarPlaceholder.style.display = 'none';
-    elements.remoteVideo.srcObject = stream;
-    elements.remoteVideo.play().catch(e => console.warn(e));
   } else {
     elements.remoteAvatarPlaceholder.style.display = 'flex';
   }
@@ -1200,6 +1234,12 @@ async function toggleScreenShare() {
 
       elements.mainCinemaScreen.classList.add('live');
       elements.screenShareVideo.srcObject = state.screenStream;
+      elements.screenShareVideo.muted = true; // Transmissor NÃO deve ouvir o próprio áudio duplicado com eco!
+
+      const hasAudio = state.screenStream.getAudioTracks().length > 0;
+      if (!hasAudio) {
+        showToast('💡 Dica: Para seu parceiro ouvir o som do filme, marque "Compartilhar áudio" na janela de seleção.');
+      }
 
       if (state.room) {
         try {

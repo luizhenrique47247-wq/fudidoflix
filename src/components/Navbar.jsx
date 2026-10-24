@@ -188,13 +188,7 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
     { id: 'movie', name: 'Filmes' },
     { id: 'anime', name: 'Animes' },
     { id: 'minha-lista', name: 'Minha lista' },
-    { id: 'sorte', name: 'Sorte', icon: <Dices className="w-4 h-4 mr-1 inline-block" /> },
-    { id: 'cine-amor', name: 'Cine Amor', icon: <span className="mr-1.5 text-sm">🍿</span> },
-    { 
-      id: 'ao-vivo', 
-      name: 'Ao Vivo', 
-      icon: <span className="w-2 h-2 rounded-full bg-red-600 mr-1.5 animate-pulse inline-block"></span> 
-    }
+    { id: 'sorte', name: 'Sorte', icon: <Dices className="w-4 h-4 mr-1 inline-block" /> }
   ];
 
   return (
@@ -413,6 +407,16 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
                   Trocar Perfil
                 </button>
                 <button 
+                  onClick={() => { 
+                    setProfileOpen(false); 
+                    window.location.href = './discord/'; 
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm text-amber-400 hover:bg-amber-400/10 flex items-center transition-colors font-bold border-b border-zinc-900/40"
+                >
+                  <span className="mr-3 text-base">🍿</span>
+                  Cine Amor
+                </button>
+                <button 
                   onClick={() => { setProfileOpen(false); onLogout(); }}
                   className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 flex items-center transition-colors font-semibold"
                 >
@@ -519,6 +523,16 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
               >
                 <Users className="w-5 h-5 mr-3 text-zinc-500" />
                 Trocar Perfil
+              </button>
+              <button 
+                onClick={() => { 
+                  setMobileMenuOpen(false); 
+                  window.location.href = './discord/'; 
+                }}
+                className="w-full text-left p-3 rounded-xl hover:bg-amber-400/10 text-amber-400 flex items-center text-base font-bold transition-colors"
+              >
+                <span className="mr-3 text-lg">🍿</span>
+                Cine Amor
               </button>
               <button 
                 onClick={() => { setMobileMenuOpen(false); onLogout(); }}

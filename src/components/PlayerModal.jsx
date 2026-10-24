@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, ListVideo, SkipForward, Loader2, Eye } from 'lucide-react';
-import Hls from 'hls.js';
 import { fetchTMDB, IMG_POSTER_URL } from '../services/api';
 import * as Storage from '../services/storageService';
 
@@ -55,7 +54,6 @@ export default function PlayerModal({ id, type: rawType, initialSeason, initialE
   const [playerUrl, setPlayerUrl] = useState('');
 
   const videoRef = useRef(null);
-  const hlsRef = useRef(null);
 
   // Fetch IMDb ID if missing (needed for ViewPlayer)
   useEffect(() => {
@@ -78,11 +76,6 @@ export default function PlayerModal({ id, type: rawType, initialSeason, initialE
       return;
     }
 
-    if (type === 'channel') {
-      // HLS stream (IPTV)
-      setPlayerUrl(id);
-      return;
-    }
 
     // Save to history
     if (itemData) {
@@ -168,48 +161,15 @@ export default function PlayerModal({ id, type: rawType, initialSeason, initialE
     loadEpisodes();
   }, [id, type, selectedEpListSeason, epListOpen]);
 
-  // IPTV Native HLS.js integration
   useEffect(() => {
-    const isCustomVideo = type === 'channel' || (resolvedStreamUrl && currentSeason === (initialSeason || 1) && currentEpisode === (initialEpisode || 1));
+    const isCustomVideo = Boolean(resolvedStreamUrl && currentSeason === (initialSeason || 1) && currentEpisode === (initialEpisode || 1));
     if (!isCustomVideo || !videoRef.current || !playerUrl) return;
 
     const video = videoRef.current;
-    const isHls = playerUrl.includes('.m3u8') || type === 'channel';
-    
-    if (isHls) {
-      if (Hls.isSupported()) {
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-        }
-        const hls = new Hls({
-          maxMaxBufferLength: 10,
-          enableWorker: true
-        });
-        hlsRef.current = hls;
-        hls.loadSource(playerUrl);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch(err => console.log("HLS autoplay blocked:", err));
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = playerUrl;
-        video.addEventListener('loadedmetadata', () => {
-          video.play().catch(err => console.log("Native autoplay blocked:", err));
-        });
-      }
-    } else {
-      video.src = playerUrl;
-      video.load();
-      video.play().catch(err => console.log("Direct video autoplay blocked:", err));
-    }
-
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [playerUrl, type, currentSeason, currentEpisode, resolvedStreamUrl, initialSeason, initialEpisode]);
+    video.src = playerUrl;
+    video.load();
+    video.play().catch(err => console.log("Direct video autoplay blocked:", err));
+  }, [playerUrl, currentSeason, currentEpisode, resolvedStreamUrl, initialSeason, initialEpisode]);
 
   const handleNextEpisode = () => {
     const currentSeasonData = seasons.find(s => s.season_number === currentSeason);
@@ -250,7 +210,7 @@ export default function PlayerModal({ id, type: rawType, initialSeason, initialE
         </button>
 
         {/* Bot�o Assistir a Dois (Cine Amor) */}
-        {onOpenCineAmor && (!isTrailer && type !== 'channel') && (
+        {onOpenCineAmor && !isTrailer && (
           <button
             onClick={() => onOpenCineAmor(itemData || { id, title: 'Filme' })}
             className="bg-amber-500/90 hover:bg-amber-400 text-black text-sm font-black py-3 px-4 rounded-xl shadow-2xl flex items-center gap-2 cursor-pointer transition-all active:scale-95"
@@ -262,7 +222,7 @@ export default function PlayerModal({ id, type: rawType, initialSeason, initialE
         )}
 
         {/* Server select dropdown */}
-        {type !== 'channel' && !isTrailer && (
+        {!isTrailer && (
           <select 
             value={server} 
             onChange={(e) => setServer(e.target.value)}

@@ -8,10 +8,8 @@ import Browse from './views/Browse';
 import CategoryPage from './views/CategoryPage';
 import MinhaLista from './views/MinhaLista';
 import Historico from './views/Historico';
-import AoVivo from './views/AoVivo';
 import Sorte from './views/Sorte';
 import Profiles from './views/Profiles';
-import CineAmor from './components/CineAmor';
 import * as Storage from './services/storageService';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './services/firebase';
@@ -63,7 +61,6 @@ export default function App() {
 
   // App confirm actions modals states
   const [confirmModal, setConfirmModal] = useState(null);
-  const [cineAmorModal, setCineAmorModal] = useState(null); // { title, msg, action }
   
   // Scroll back to top state
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -389,15 +386,6 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'ao-vivo' && <AoVivo />}
-
-        {activeTab === 'cine-amor' && (
-          <CineAmor 
-            activeProfile={activeProfile} 
-            onClose={() => setActiveTab('inicio')} 
-          />
-        )}
-
         {activeTab === 'sorte' && (
           <Sorte 
             openDetails={(id, type) => setDetailsMedia({ id, type })}
@@ -513,17 +501,6 @@ export default function App() {
         </button>
       )}
 
-      {/* Cine Amor Overlay Modal */}
-      {cineAmorModal && (
-        <div className="fixed inset-0 z-[200]">
-          <CineAmor 
-            activeProfile={activeProfile} 
-            initialMedia={cineAmorModal.media} 
-            onClose={() => setCineAmorModal(null)} 
-          />
-        </div>
-      )}
-
       {/* Details Modal Overlay */}
       {detailsMedia && (
         <DetailsModal 
@@ -550,7 +527,7 @@ export default function App() {
           isTrailer={playerMedia.isTrailer}
           trailerKey={playerMedia.trailerKey}
           onClose={() => setPlayerMedia(null)}
-          onOpenCineAmor={(media) => { setPlayerMedia(null); setCineAmorModal({ media }); }}
+          onOpenCineAmor={() => { setPlayerMedia(null); window.location.href = './discord/'; }}
           onPlayerClose={() => {
             // Trigger refresh logic on closing player
             if (activeTab === 'inicio') {

@@ -862,18 +862,34 @@ async function joinCall() {
 
     state.joinedAt = Date.now();
 
-    state.localStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      },
-      video: false
-    });
+    // 1. Tenta inicializar o microfone de forma suave (se o navegador já tiver ocupado ou der erro, entra mesmo assim)
+    try {
+      state.localStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        },
+        video: false
+      });
+      setupVoiceDetector(state.localStream);
+      state.isMuted = false;
+      if (elements.toggleMicBtn) {
+        elements.toggleMicBtn.classList.remove('muted');
+      }
+    } catch (micErr) {
+      console.warn('Microfone não pôde ser ativado ao entrar (ocupado por outra aba/app ou sem permissão):', micErr);
+      state.localStream = null;
+      state.isMuted = true;
+      if (elements.toggleMicBtn) {
+        elements.toggleMicBtn.classList.add('muted');
+      }
+      showToast('⚠️ Microfone ocupado ou bloqueado. Entrou no modo ouvinte!');
+    }
 
     playSfx('join');
-    setupVoiceDetector(state.localStream);
 
+    // 2. Conecta na sala P2P (Trystero)
     state.room = joinRoom(TRYSTERO_CONFIG, state.user.room);
 
     const [sendPresence, onPresence] = state.room.makeAction('presence');
@@ -1085,8 +1101,8 @@ async function joinCall() {
 
     showToast(`🍿 Poltrona ocupada! Você é o ${state.assignedRole}.`);
   } catch (err) {
-    console.error('Erro ao conectar:', err);
-    alert('Por favor, libere o microfone no navegador para entrar na sala.');
+    console.error('Erro ao conectar na sala:', err);
+    showToast('⚠️ Erro ao entrar: ' + (err.message || 'tente recarregar'));
   }
 }
 
@@ -1249,6 +1265,7 @@ function broadcastPresence() {
 
 // --- Detector de Voz ---
 function setupVoiceDetector(stream) {
+  if (!stream || !stream.getAudioTracks || stream.getAudioTracks().length === 0) return;
   try {
     const ctx = getAudioContext();
     if (ctx.state === 'suspended') {
@@ -1443,8 +1460,39 @@ function handleRemoteTrack(track, stream, peerId, metadata) {
 }
 
 // --- Controles de Mídia ---
-function toggleMute() {
-  if (!state.localStream) return;
+async function toggleMute() {
+  if (!state.localStream) {
+    try {
+      state.localStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        },
+        video: false
+      });
+      setupVoiceDetector(state.localStream);
+      state.isMuted = false;
+      playSfx('unmute');
+      elements.toggleMicBtn.classList.remove('muted');
+      elements.localMutedBadge.style.display = 'none';
+
+      for (const peerId of Object.keys(state.peers)) {
+        try {
+          await state.room.addStream(state.localStream, peerId, { type: 'mic' });
+        } catch (e) {}
+      }
+
+      broadcastPresence();
+      showToast('🎤 Microfone ativado com sucesso!');
+      return;
+    } catch (err) {
+      console.warn('Falha ao ativar microfone:', err);
+      showToast('⚠️ Microfone não disponível ou bloqueado.');
+      return;
+    }
+  }
+
   state.isMuted = !state.isMuted;
 
   const audioTrack = state.localStream.getAudioTracks()[0];
@@ -1493,7 +1541,9 @@ async function toggleCamera() {
         }
       }
       videoTrack.stop();
-      state.localStream.removeTrack(videoTrack);
+      if (state.localStream) {
+        state.localStream.removeTrack(videoTrack);
+      }
     }
     elements.localVideo.srcObject = null;
     elements.localAvatarPlaceholder.style.display = 'flex';
@@ -1510,6 +1560,9 @@ async function toggleCamera() {
       });
       playSfx('camera_on');
       const videoTrack = camStream.getVideoTracks()[0];
+      if (!state.localStream) {
+        state.localStream = new MediaStream();
+      }
       state.localStream.addTrack(videoTrack);
 
       elements.localVideo.srcObject = new MediaStream([videoTrack]);

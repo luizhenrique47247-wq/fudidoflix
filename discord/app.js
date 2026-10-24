@@ -1,6 +1,9 @@
 // Import do Trystero via Nostr (Sinalização P2P ultrarrápida sem servidor)
 import { joinRoom } from 'https://esm.sh/trystero@0.20.1/nostr';
 
+// Chave padrão oficial do Hyperbeam configurada para o Cine Amor
+const HYPERBEAM_DEFAULT_API_KEY = 'sk_live_32jD_MopTyCDqizIviENzu3NxtocjYSu8cN3xhXRoTE';
+
 // --- Estado Global ---
 const state = {
   inCall: false,
@@ -14,6 +17,7 @@ const state = {
   isScreenSharing: false,
   isVirtualBrowserActive: false,
   virtualBrowserEmbedUrl: null,
+  virtualBrowserSessionId: null,
   isSpeaking: false,
   isAlarmPlaying: false,
 
@@ -1052,6 +1056,10 @@ async function joinCall() {
         elements.screenShareVideo.srcObject = null;
       }
 
+      if (data.isVirtualBrowserActive && data.virtualBrowserEmbedUrl && !state.isVirtualBrowserActive) {
+        mountVirtualBrowser(data.virtualBrowserEmbedUrl, false);
+      }
+
       resolveUserRoles();
     });
 
@@ -1233,7 +1241,9 @@ function broadcastPresence() {
     isDeafened: state.isDeafened,
     isCameraOn: state.isCameraOn,
     isSharingScreen: state.isScreenSharing,
-    screenStreamId: state.screenStream ? state.screenStream.id : null
+    screenStreamId: state.screenStream ? state.screenStream.id : null,
+    isVirtualBrowserActive: state.isVirtualBrowserActive,
+    virtualBrowserEmbedUrl: state.virtualBrowserEmbedUrl
   });
 }
 
@@ -1550,8 +1560,8 @@ function closeProjectionChoiceModal() {
 
 function openHyperbeamConfigModal() {
   if (elements.hyperbeamConfigModal) {
-    if (elements.hbApiKeyInput) {
-      elements.hbApiKeyInput.value = localStorage.getItem('hyperbeam_api_key') || '';
+    if (elements.hbApiKeyInput && !elements.hbApiKeyInput.value) {
+      elements.hbApiKeyInput.value = localStorage.getItem('hyperbeam_api_key') || HYPERBEAM_DEFAULT_API_KEY;
     }
     if (elements.hbEmbedUrlInput) {
       elements.hbEmbedUrlInput.value = localStorage.getItem('hyperbeam_embed_url') || '';
@@ -1568,16 +1578,16 @@ function closeHyperbeamConfigModal() {
 
 function openVirtualBrowserFlow() {
   const savedEmbedUrl = localStorage.getItem('hyperbeam_embed_url') || '';
-  const savedApiKey = localStorage.getItem('hyperbeam_api_key') || '';
+  const apiKey = (localStorage.getItem('hyperbeam_api_key') || HYPERBEAM_DEFAULT_API_KEY).trim();
 
   if (savedEmbedUrl) {
     mountVirtualBrowser(savedEmbedUrl, true);
     return;
   }
 
-  if (savedApiKey) {
+  if (apiKey) {
     showToast('⏳ Conectando ao Navegador Virtual...');
-    createHyperbeamSession(savedApiKey).then(url => {
+    createHyperbeamSession(apiKey).then(url => {
       mountVirtualBrowser(url, true);
     }).catch(err => {
       console.warn(err);
@@ -1590,7 +1600,7 @@ function openVirtualBrowserFlow() {
 }
 
 async function handleStartHyperbeamSubmit() {
-  const apiKey = elements.hbApiKeyInput ? elements.hbApiKeyInput.value.trim() : '';
+  const apiKey = (elements.hbApiKeyInput ? elements.hbApiKeyInput.value.trim() : '') || HYPERBEAM_DEFAULT_API_KEY;
   const embedUrl = elements.hbEmbedUrlInput ? elements.hbEmbedUrlInput.value.trim() : '';
 
   if (!apiKey && !embedUrl) {
@@ -1621,33 +1631,15 @@ async function handleStartHyperbeamSubmit() {
 }
 
 async function createHyperbeamSession(apiKey) {
-  const cleanKey = apiKey.trim();
+  const cleanKey = (apiKey || HYPERBEAM_DEFAULT_API_KEY).trim();
   const payload = {
     start_url: 'https://www.google.com',
-    offline_timeout: 300
+    offline_timeout: 3600
   };
 
-  // 1. Tentativa Direta
-  try {
-    const res = await fetch('https://engine.hyperbeam.com/v0/vm', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${cleanKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.embed_url) return data.embed_url;
-    }
-  } catch (e) {
-    console.warn('Tentativa direta ao Hyperbeam bloqueada por CORS, usando proxy...');
-  }
-
-  // 2. Proxies com suporte a Authorization
+  // Proxy seguro com suporte total a CORS e repasse de Authorization Bearer
   const proxies = [
-    `https://corsproxy.io/?url=${encodeURIComponent('https://engine.hyperbeam.com/v0/vm')}`
+    `https://vercel-cors-proxy.vercel.app/api/proxy?url=${encodeURIComponent('https://engine.hyperbeam.com/v0/vm')}`
   ];
 
   for (const proxy of proxies) {
@@ -1662,14 +1654,42 @@ async function createHyperbeamSession(apiKey) {
       });
       if (res.ok) {
         const data = await res.json();
+        if (data.session_id) {
+          state.virtualBrowserSessionId = data.session_id;
+        }
         if (data.embed_url) return data.embed_url;
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        if (errData.code === 'err_too_many_vm_requests') {
+          throw new Error('Aguarde alguns instantes antes de iniciar outra sessão de navegador virtual.');
+        }
       }
     } catch (err) {
+      if (err.message && err.message.includes('Aguarde')) throw err;
       console.warn('Proxy falhou:', err);
     }
   }
 
-  throw new Error('Não foi possível conectar à API do Hyperbeam automaticamente por restrição de CORS. Cole diretamente o Link de Sessão (Embed URL)!');
+  // Fallback direto
+  try {
+    const res = await fetch('https://engine.hyperbeam.com/v0/vm', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${cleanKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.session_id) state.virtualBrowserSessionId = data.session_id;
+      if (data.embed_url) return data.embed_url;
+    }
+  } catch (e) {
+    console.warn('Tentativa direta ao Hyperbeam bloqueada por CORS.');
+  }
+
+  throw new Error('Não foi possível conectar à API do Hyperbeam automaticamente. Cole diretamente o Link de Sessão (Embed URL)!');
 }
 
 function mountVirtualBrowser(embedUrl, isCreator) {
@@ -1704,8 +1724,25 @@ function mountVirtualBrowser(embedUrl, isCreator) {
 }
 
 function unmountVirtualBrowser(isInitiator) {
+  const sessionId = state.virtualBrowserSessionId;
+  const apiKey = (localStorage.getItem('hyperbeam_api_key') || HYPERBEAM_DEFAULT_API_KEY).trim();
+
   state.isVirtualBrowserActive = false;
   state.virtualBrowserEmbedUrl = null;
+  state.virtualBrowserSessionId = null;
+
+  // Encerra a VM na nuvem para economizar minutos e evitar rate limits
+  if (isInitiator && sessionId) {
+    try {
+      const deleteUrl = `https://vercel-cors-proxy.vercel.app/api/proxy?url=${encodeURIComponent('https://engine.hyperbeam.com/v0/vm/' + sessionId)}`;
+      fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        }
+      }).catch(e => console.warn('Erro ao encerrar sessão VM:', e));
+    } catch (e) {}
+  }
 
   if (elements.virtualBrowserIframe) {
     elements.virtualBrowserIframe.src = 'about:blank';

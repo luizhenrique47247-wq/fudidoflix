@@ -189,6 +189,7 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onClearList,
     { id: 'anime', name: 'Animes' },
     { id: 'minha-lista', name: 'Minha lista' },
     { id: 'sorte', name: 'Sorte', icon: <Dices className="w-4 h-4 mr-1 inline-block" /> },
+    { id: 'cine-amor', name: 'Cine Amor', icon: <span className="mr-1.5 text-sm">??</span> },
     { 
       id: 'ao-vivo', 
       name: 'Ao Vivo', 

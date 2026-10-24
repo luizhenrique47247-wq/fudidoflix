@@ -40,7 +40,7 @@ const PLAYER_APIS = {
   }
 };
 
-export default function PlayerModal({ id, type: rawType, initialSeason, initialEpisode, itemData, resolvedStreamUrl, isTrailer, trailerKey, onClose, onPlayerClose }) {
+export default function PlayerModal({ id, type: rawType, initialSeason, initialEpisode, itemData, resolvedStreamUrl, isTrailer, trailerKey, onClose, onPlayerClose, onOpenCineAmor }) {
   const type = rawType === 'anime' ? 'tv' : rawType;
   // Default server: ViewPlayer for Movies, AutoEmbed for TV Series
   const [server, setServer] = useState(type === 'tv' ? 'autoembed' : 'viewplayer');
@@ -248,6 +248,18 @@ export default function PlayerModal({ id, type: rawType, initialSeason, initialE
         >
           <X className="w-6 h-6" />
         </button>
+
+        {/* Botão Assistir a Dois (Cine Amor) */}
+        {onOpenCineAmor && (!isTrailer && type !== 'channel') && (
+          <button
+            onClick={() => onOpenCineAmor(itemData || { id, title: 'Filme' })}
+            className="bg-amber-500/90 hover:bg-amber-400 text-black text-sm font-black py-3 px-4 rounded-xl shadow-2xl flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+            title="Assistir com seu par no Cine Amor"
+          >
+            <span className="text-base">??</span>
+            <span className="hidden sm:inline">Assistir a Dois</span>
+          </button>
+        )}
 
         {/* Server select dropdown */}
         {type !== 'channel' && !isTrailer && (

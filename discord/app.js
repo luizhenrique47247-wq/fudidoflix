@@ -1805,7 +1805,7 @@ function unmountVirtualBrowser(isInitiator) {
   }
   elements.mainCinemaScreen.classList.remove('live', 'virtual-browser-active');
   if (elements.screenShareVideo) {
-    elements.screenShareVideo.style.display = 'block';
+    elements.screenShareVideo.style.display = 'none';
   }
   if (elements.projectorStandby) {
     elements.projectorStandby.style.display = 'flex';

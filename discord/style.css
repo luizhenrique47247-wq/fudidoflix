@@ -705,12 +705,20 @@ body.movie-night-theme {
   display: none;
 }
 
-.giant-projection-screen.live video#screenShareVideo {
+.giant-projection-screen.live:not(.virtual-browser-active) video#screenShareVideo {
   display: block;
 }
 
 .giant-projection-screen.live .retro-standby {
-  display: none;
+  display: none !important;
+}
+
+.giant-projection-screen:not(.live) video#screenShareVideo {
+  display: none !important;
+}
+
+.giant-projection-screen:not(.live) .retro-standby {
+  display: flex !important;
 }
 
 /* Standby do Projetor */

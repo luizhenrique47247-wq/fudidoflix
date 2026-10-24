@@ -12,6 +12,12 @@ export default function MinhaLista({ onSelectMedia }) {
 
   useEffect(() => {
     loadData();
+    window.addEventListener('fudidoFlixStorageUpdated', loadData);
+    window.addEventListener('storage', loadData);
+    return () => {
+      window.removeEventListener('fudidoFlixStorageUpdated', loadData);
+      window.removeEventListener('storage', loadData);
+    };
   }, []);
 
   return (

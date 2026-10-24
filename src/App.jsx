@@ -13,6 +13,8 @@ import Sorte from './views/Sorte';
 import Profiles from './views/Profiles';
 import CineAmor from './components/CineAmor';
 import * as Storage from './services/storageService';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './services/firebase';
 import { ArrowLeft, Loader2, ArrowUp, Trash2, LogOut, History } from 'lucide-react';
 import { fetchTMDB, IMG_POSTER_URL } from './services/api';
 
@@ -26,9 +28,25 @@ export default function App() {
   const [introOpen, setIntroOpen] = useState(
     !sessionStorage.getItem(INTRO_WATCHED_KEY)
   );
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [activeProfile, setActiveProfile] = useState(
     Storage.getActiveProfile()
   );
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem('fudidoFlixAccess', 'granted');
+        Storage.initFirestoreSync();
+      } else {
+        setIsAuthenticated(false);
+        sessionStorage.removeItem('fudidoFlixAccess');
+      }
+      setIsAuthChecking(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Search, Actor, and Genre filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -255,6 +273,7 @@ export default function App() {
       Storage.clearAllHistory();
       window.location.reload();
     } else if (action === 'logout') {
+      signOut(auth).catch(console.error);
       sessionStorage.removeItem('fudidoFlixAccess');
       sessionStorage.removeItem(INTRO_WATCHED_KEY);
       Storage.clearActiveProfileId();
@@ -264,8 +283,26 @@ export default function App() {
     }
   };
 
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white font-sans">
+        <Loader2 className="w-10 h-10 animate-spin text-[#E50914] mb-3" />
+        <span className="text-xs font-black uppercase tracking-widest text-zinc-400">
+          Verificando Sessão Firebase...
+        </span>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return (
+      <Login 
+        onLoginSuccess={() => {
+          setIsAuthenticated(true);
+          Storage.initFirestoreSync();
+        }} 
+      />
+    );
   }
 
   if (!activeProfile) {

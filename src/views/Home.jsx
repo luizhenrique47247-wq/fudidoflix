@@ -51,6 +51,23 @@ export default function Home({ onSelectMedia }) {
     };
 
     loadHomeData();
+
+    const handleStorageUpdate = (e) => {
+      if (!e.detail?.key || e.detail.key.includes('WatchedHistory')) {
+        setRowsData(prev => ({
+          ...prev,
+          "Últimos Assistidos": Storage.getWatchedHistory()
+        }));
+      }
+    };
+
+    window.addEventListener('fudidoFlixStorageUpdated', handleStorageUpdate);
+    window.addEventListener('storage', handleStorageUpdate);
+
+    return () => {
+      window.removeEventListener('fudidoFlixStorageUpdated', handleStorageUpdate);
+      window.removeEventListener('storage', handleStorageUpdate);
+    };
   }, []);
 
   return (

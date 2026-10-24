@@ -14,6 +14,12 @@ export default function Historico({ onSelectMedia }) {
 
   useEffect(() => {
     loadData();
+    window.addEventListener('fudidoFlixStorageUpdated', loadData);
+    window.addEventListener('storage', loadData);
+    return () => {
+      window.removeEventListener('fudidoFlixStorageUpdated', loadData);
+      window.removeEventListener('storage', loadData);
+    };
   }, []);
 
   const triggerRemoveConfirm = (item) => {

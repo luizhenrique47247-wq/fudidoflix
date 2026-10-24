@@ -256,7 +256,7 @@ export default function PlayerModal({ id, type: rawType, initialSeason, initialE
             className="bg-amber-500/90 hover:bg-amber-400 text-black text-sm font-black py-3 px-4 rounded-xl shadow-2xl flex items-center gap-2 cursor-pointer transition-all active:scale-95"
             title="Assistir com seu par no Cine Amor"
           >
-            <span className="text-base">??</span>
+            <span className="text-base">🍿</span>
             <span className="hidden sm:inline">Assistir a Dois</span>
           </button>
         )}

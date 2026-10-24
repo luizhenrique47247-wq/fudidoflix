@@ -23,3 +23,5 @@ test_megacine.*
 *.njsproj
 *.sln
 *.sw?
+.firebase
+*.bat

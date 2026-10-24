@@ -39,43 +39,41 @@ export async function deleteFromFirestore(key) {
   }
 }
 
-let firestoreSyncInitialized = false;
+const syncedKeys = new Set();
 
-export function initFirestoreSync() {
-  if (firestoreSyncInitialized) return;
-  firestoreSyncInitialized = true;
+export function listenToKey(key) {
+  if (!key || syncedKeys.has(key)) return;
+  syncedKeys.add(key);
 
-  const syncedKeys = new Set();
-  const listenToKey = (key) => {
-    if (!key || syncedKeys.has(key)) return;
-    syncedKeys.add(key);
+  try {
+    onSnapshot(doc(db, DATA_COLLECTION, key), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && data.items) {
+          localStorage.setItem(key, JSON.stringify(data.items));
+          window.dispatchEvent(new CustomEvent('fudidoFlixStorageUpdated', { detail: { key } }));
 
-    try {
-      onSnapshot(doc(db, DATA_COLLECTION, key), (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          if (data && data.items) {
-            localStorage.setItem(key, JSON.stringify(data.items));
-            window.dispatchEvent(new CustomEvent('fudidoFlixStorageUpdated', { detail: { key } }));
-
-            if (key === PROFILES_KEY && Array.isArray(data.items)) {
-              data.items.forEach(profile => {
-                listenToKey(`${MY_LIST_KEY}_${profile.id}`);
-                listenToKey(`${WATCHED_HISTORY_KEY}_${profile.id}`);
-                listenToKey(`${CONTINUE_WATCHING_KEY}_${profile.id}`);
-                listenToKey(`${WATCHED_EPISODES_KEY}_${profile.id}`);
-              });
-            }
+          if (key === PROFILES_KEY && Array.isArray(data.items)) {
+            data.items.forEach(profile => {
+              listenToKey(`${MY_LIST_KEY}_${profile.id}`);
+              listenToKey(`${WATCHED_HISTORY_KEY}_${profile.id}`);
+              listenToKey(`${CONTINUE_WATCHING_KEY}_${profile.id}`);
+              listenToKey(`${WATCHED_EPISODES_KEY}_${profile.id}`);
+            });
           }
         }
-      }, (err) => {
-        console.warn(`[Firestore Listener] ${key}:`, err);
-      });
-    } catch (err) {
-      console.warn(`Erro ao iniciar listener Firestore para ${key}:`, err);
-    }
-  };
+      }
+    }, (err) => {
+      console.warn(`[Firestore Listener] ${key}:`, err);
+      syncedKeys.delete(key);
+    });
+  } catch (err) {
+    syncedKeys.delete(key);
+    console.warn(`Erro ao iniciar listener Firestore para ${key}:`, err);
+  }
+}
 
+export function initFirestoreSync() {
   // Escuta os perfis e recomendações
   [PROFILES_KEY, 'fudidoFlixLoveRecommendations'].forEach(listenToKey);
 
@@ -95,9 +93,7 @@ export function getProfiles() {
     try {
         const profilesJson = localStorage.getItem(PROFILES_KEY);
         if (!profilesJson) {
-            const defaultProfiles = [];
-            localStorage.setItem(PROFILES_KEY, JSON.stringify(defaultProfiles));
-            return defaultProfiles;
+            return [];
         }
         return JSON.parse(profilesJson);
     } catch (error) {
@@ -116,6 +112,10 @@ export function saveProfile(name, avatar = '') {
         profiles.push(newProfile);
         localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
         syncToFirestore(PROFILES_KEY, profiles);
+        listenToKey(`${MY_LIST_KEY}_${newProfile.id}`);
+        listenToKey(`${WATCHED_HISTORY_KEY}_${newProfile.id}`);
+        listenToKey(`${CONTINUE_WATCHING_KEY}_${newProfile.id}`);
+        listenToKey(`${WATCHED_EPISODES_KEY}_${newProfile.id}`);
         return newProfile;
     } catch (error) {
         console.error("Erro ao salvar perfil:", error);

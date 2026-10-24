@@ -950,6 +950,21 @@ async function joinCall() {
       const prevScreen = state.peers[peerId].isSharingScreen;
       state.peers[peerId] = { ...state.peers[peerId], ...data };
 
+      if (data.left || data.inCall === false) {
+        delete state.peers[peerId];
+        if (elements.remoteAudio) elements.remoteAudio.srcObject = null;
+        elements.remoteVideo.srcObject = null;
+        elements.remoteAvatarPlaceholder.style.display = 'flex';
+        elements.mainCinemaScreen.classList.remove('live');
+        elements.screenShareVideo.srcObject = null;
+        if (elements.remoteCamSlot) elements.remoteCamSlot.style.display = 'none';
+        if (state.pinnedUser === 'remote') {
+          togglePinSwap('remote');
+        }
+        resolveUserRoles();
+        return;
+      }
+
       if (data.isCameraOn === false && prevCam !== false) {
         elements.remoteVideo.srcObject = null;
         elements.remoteAvatarPlaceholder.style.display = 'flex';
@@ -1005,16 +1020,70 @@ function leaveCall() {
     exitMovieFullscreen();
   }
 
-  if (state.localStream) {
-    state.localStream.getTracks().forEach(t => t.stop());
-    state.localStream = null;
+  // Notifica o parceiro imediatamente via WebRTC antes de fechar a sala
+  if (state.sendScreenSync) {
+    try {
+      state.sendScreenSync({ active: false });
+    } catch (e) {}
   }
+
+  if (state.sendPresence) {
+    try {
+      state.sendPresence({
+        name: state.user.name,
+        customName: state.user.customName,
+        assignedRole: state.assignedRole,
+        inCall: false,
+        isCameraOn: false,
+        isSharingScreen: false,
+        left: true
+      });
+    } catch (e) {}
+  }
+
+  // Interrompe qualquer transmissão de tela ativa e libera o navegador imediatamente
   if (state.screenStream) {
-    state.screenStream.getTracks().forEach(t => t.stop());
+    try {
+      if (state.room) {
+        state.room.removeStream(state.screenStream);
+      }
+    } catch (e) {}
+    try {
+      state.screenStream.getTracks().forEach(track => {
+        track.stop();
+        track.enabled = false;
+      });
+    } catch (e) {}
     state.screenStream = null;
   }
+
+  // Interrompe microfone e câmera
+  if (state.localStream) {
+    try {
+      state.localStream.getTracks().forEach(track => {
+        track.stop();
+        track.enabled = false;
+      });
+    } catch (e) {}
+    state.localStream = null;
+  }
+
+  // Interrompe e limpa qualquer stream residual nos elementos HTML
+  [elements.localVideo, elements.remoteVideo, elements.screenShareVideo, elements.remoteAudio].forEach(el => {
+    if (el && el.srcObject) {
+      try {
+        if (el.srcObject.getTracks) {
+          el.srcObject.getTracks().forEach(t => t.stop());
+        }
+      } catch (e) {}
+      el.srcObject = null;
+    }
+  });
+
   if (state.room) {
-    state.room.leave();
+    try {
+      state.room.leave();
+    } catch (e) {}
     state.room = null;
   }
 
@@ -1033,12 +1102,7 @@ function leaveCall() {
   elements.dockContainer.style.display = 'none';
 
   elements.mainCinemaScreen.classList.remove('live');
-  elements.screenShareVideo.srcObject = null;
-
-  if (elements.remoteAudio) elements.remoteAudio.srcObject = null;
-  elements.localVideo.srcObject = null;
   elements.localAvatarPlaceholder.style.display = 'flex';
-  elements.remoteVideo.srcObject = null;
   elements.remoteAvatarPlaceholder.style.display = 'flex';
   if (elements.remoteCamSlot) {
     elements.remoteCamSlot.style.display = 'none';
@@ -1421,9 +1485,13 @@ async function toggleScreenShare() {
         state.sendScreenSync({ active: true, streamId: state.screenStream.id });
       }
 
-      state.screenStream.getVideoTracks()[0].onended = () => {
-        stopScreenShare();
-      };
+      state.screenStream.getTracks().forEach(track => {
+        track.onended = () => {
+          if (state.isScreenSharing) {
+            stopScreenShare();
+          }
+        };
+      });
 
       broadcastPresence();
     } catch (err) {
@@ -1442,7 +1510,12 @@ function stopScreenShare() {
         console.warn('Aviso ao remover transmissão de tela:', e);
       }
     }
-    state.screenStream.getTracks().forEach(t => t.stop());
+    try {
+      state.screenStream.getTracks().forEach(t => {
+        t.stop();
+        t.enabled = false;
+      });
+    } catch (e) {}
     state.screenStream = null;
   }
 
@@ -1532,3 +1605,9 @@ function saveProfileModal() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+window.addEventListener('beforeunload', () => {
+  if (state.inCall) {
+    leaveCall();
+  }
+});

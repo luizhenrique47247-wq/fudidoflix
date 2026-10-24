@@ -369,6 +369,7 @@ const elements = {
   remoteSlot: document.getElementById('remoteSlot'),
   remoteCamSlot: document.getElementById('remoteCamSlot'),
   remoteVideo: document.getElementById('remoteVideo'),
+  remoteAudio: document.getElementById('remoteAudio'),
   remoteAvatarPlaceholder: document.getElementById('remoteAvatarPlaceholder'),
   remoteBigAvatar: document.getElementById('remoteBigAvatar'),
   remoteMetaName: document.getElementById('remoteMetaName'),
@@ -402,6 +403,9 @@ function resetFullscreenIdleTimer() {
   if (!document.fullscreenElement) return;
 
   elements.callGrid.classList.remove('fullscreen-idle');
+  if (elements.mainCinemaScreen) {
+    elements.mainCinemaScreen.classList.remove('fullscreen-idle');
+  }
 
   if (fullscreenIdleTimer) {
     clearTimeout(fullscreenIdleTimer);
@@ -410,6 +414,9 @@ function resetFullscreenIdleTimer() {
   fullscreenIdleTimer = setTimeout(() => {
     if (document.fullscreenElement) {
       elements.callGrid.classList.add('fullscreen-idle');
+      if (elements.mainCinemaScreen) {
+        elements.mainCinemaScreen.classList.add('fullscreen-idle');
+      }
     }
   }, 3000); // 3 segundos sem mexer o mouse oculta os controles e o cursor
 }
@@ -466,8 +473,17 @@ function init() {
     });
   }
 
-  // Dois cliques na telona de vídeo alternam tela cheia
+  // Dois cliques na telona de vídeo ou no palco alternam tela cheia
   elements.screenShareVideo.addEventListener('dblclick', () => {
+    if (document.fullscreenElement) {
+      exitMovieFullscreen();
+    } else {
+      enterMovieFullscreen();
+    }
+  });
+
+  elements.mainCinemaScreen.addEventListener('dblclick', (e) => {
+    if (e.target.closest('.screen-overlay-controls') || e.target.closest('button') || e.target.closest('input')) return;
     if (document.fullscreenElement) {
       exitMovieFullscreen();
     } else {
@@ -479,6 +495,9 @@ function init() {
   elements.callGrid.addEventListener('mousemove', resetFullscreenIdleTimer);
   elements.callGrid.addEventListener('mousedown', resetFullscreenIdleTimer);
   elements.callGrid.addEventListener('touchstart', resetFullscreenIdleTimer);
+  elements.mainCinemaScreen.addEventListener('mousemove', resetFullscreenIdleTimer);
+  elements.mainCinemaScreen.addEventListener('mousedown', resetFullscreenIdleTimer);
+  elements.mainCinemaScreen.addEventListener('touchstart', resetFullscreenIdleTimer);
 
   // Monitorar mudanças no status de tela cheia
   document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -535,14 +554,16 @@ function init() {
 function handleFullscreenChange() {
   const isFS = !!document.fullscreenElement;
   if (elements.screenFullscreenBtn) {
-    elements.screenFullscreenBtn.style.display = 'flex';
-    elements.screenFullscreenBtn.title = isFS ? 'Sair da Tela Cheia' : 'Tela Cheia';
+    elements.screenFullscreenBtn.style.display = isFS ? 'none' : 'flex';
   }
   if (elements.screenExitFullscreenBtn) {
-    elements.screenExitFullscreenBtn.style.display = 'none';
+    elements.screenExitFullscreenBtn.style.display = isFS ? 'flex' : 'none';
   }
   if (!isFS) {
     elements.callGrid.classList.remove('fullscreen-idle');
+    if (elements.mainCinemaScreen) {
+      elements.mainCinemaScreen.classList.remove('fullscreen-idle');
+    }
     if (fullscreenIdleTimer) {
       clearTimeout(fullscreenIdleTimer);
       fullscreenIdleTimer = null;
@@ -794,11 +815,13 @@ async function joinCall() {
     const [sendSpeaking, onSpeaking] = state.room.makeAction('speaking');
     const [sendAlarm, onAlarm] = state.room.makeAction('alarm');
     const [sendRoomFull, onRoomFull] = state.room.makeAction('room_full');
+    const [sendScreenSync, onScreenSync] = state.room.makeAction('screensync');
 
     state.sendPresence = sendPresence;
     state.sendSpeaking = sendSpeaking;
     state.sendAlarm = sendAlarm;
     state.sendRoomFull = sendRoomFull;
+    state.sendScreenSync = sendScreenSync;
 
     // Se este usuário for o 3º tentando entrar em uma sala já com 2 pessoas
     onRoomFull((data, peerId) => {
@@ -817,6 +840,20 @@ async function joinCall() {
       }
     });
 
+    // Sincronização explícita de tela (evita confusão de câmera com tela compartilhada)
+    onScreenSync((data, peerId) => {
+      if (state.peers[peerId]) {
+        state.peers[peerId].isSharingScreen = data.active;
+        state.peers[peerId].screenStreamId = data.streamId;
+      }
+      if (data.active) {
+        elements.mainCinemaScreen.classList.add('live');
+      } else {
+        elements.mainCinemaScreen.classList.remove('live');
+        elements.screenShareVideo.srcObject = null;
+      }
+    });
+
     // Garante que o card do parceiro só aparece se ele REALMENTE estiver na call
     if (elements.remoteCamSlot) {
       elements.remoteCamSlot.style.display = 'none';
@@ -831,8 +868,11 @@ async function joinCall() {
         return;
       }
 
-      console.log('Parceiro conectou:', peerId);
-      playSfx('join');
+      const isNewPeer = !state.peers[peerId];
+      if (isNewPeer) {
+        console.log('Novo parceiro conectou:', peerId);
+        playSfx('join');
+      }
 
       if (!state.peers[peerId]) {
         state.peers[peerId] = {
@@ -877,8 +917,11 @@ async function joinCall() {
       console.log('Parceiro saiu:', peerId);
       playSfx('leave');
       delete state.peers[peerId];
+      if (elements.remoteAudio) elements.remoteAudio.srcObject = null;
       elements.remoteVideo.srcObject = null;
       elements.remoteAvatarPlaceholder.style.display = 'flex';
+      elements.mainCinemaScreen.classList.remove('live');
+      elements.screenShareVideo.srcObject = null;
 
       // Se o parceiro estava fixado no palco principal, desafixa antes de ocultar
       if (state.pinnedUser === 'remote') {
@@ -898,15 +941,25 @@ async function joinCall() {
     });
 
     state.room.onPeerTrack((track, stream, peerId, metadata) => {
-      handleRemoteStream(stream, peerId, metadata);
+      handleRemoteTrack(track, stream, peerId, metadata);
     });
 
     onPresence((data, peerId) => {
       if (!state.peers[peerId]) state.peers[peerId] = {};
+      const prevCam = state.peers[peerId].isCameraOn;
+      const prevScreen = state.peers[peerId].isSharingScreen;
       state.peers[peerId] = { ...state.peers[peerId], ...data };
-      if (data.isCameraOn === false) {
+
+      if (data.isCameraOn === false && prevCam !== false) {
+        elements.remoteVideo.srcObject = null;
         elements.remoteAvatarPlaceholder.style.display = 'flex';
       }
+
+      if (data.isSharingScreen === false && prevScreen !== false) {
+        elements.mainCinemaScreen.classList.remove('live');
+        elements.screenShareVideo.srcObject = null;
+      }
+
       resolveUserRoles();
     });
 
@@ -943,6 +996,11 @@ function leaveCall() {
   stopCallTimer();
   stopAlarmSound();
 
+  if (state.vadInterval) {
+    clearInterval(state.vadInterval);
+    state.vadInterval = null;
+  }
+
   if (document.fullscreenElement) {
     exitMovieFullscreen();
   }
@@ -968,6 +1026,7 @@ function leaveCall() {
   state.isDeafened = false;
   state.peers = {};
   state.sendAlarm = null;
+  state.sendScreenSync = null;
 
   elements.lobbySection.style.display = 'flex';
   elements.callGrid.style.display = 'none';
@@ -976,6 +1035,7 @@ function leaveCall() {
   elements.mainCinemaScreen.classList.remove('live');
   elements.screenShareVideo.srcObject = null;
 
+  if (elements.remoteAudio) elements.remoteAudio.srcObject = null;
   elements.localVideo.srcObject = null;
   elements.localAvatarPlaceholder.style.display = 'flex';
   elements.remoteVideo.srcObject = null;
@@ -1021,7 +1081,8 @@ function broadcastPresence() {
     isMuted: state.isMuted,
     isDeafened: state.isDeafened,
     isCameraOn: state.isCameraOn,
-    isSharingScreen: state.isScreenSharing
+    isSharingScreen: state.isScreenSharing,
+    screenStreamId: state.screenStream ? state.screenStream.id : null
   });
 }
 
@@ -1029,18 +1090,37 @@ function broadcastPresence() {
 function setupVoiceDetector(stream) {
   try {
     const ctx = getAudioContext();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
     const source = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 512;
     source.connect(analyser);
 
+    // CRÍTICO PARA ELIMINAR O CHIADO / CLIQUES "titititi":
+    // O Chromium requer um nó de saída conectado ao destination para manter a taxa de amostragem
+    // do WebAudio sincronizada com o hardware e evitar estouro de buffer (buffer underrun).
+    const silentGain = ctx.createGain();
+    silentGain.gain.value = 0;
+    analyser.connect(silentGain);
+    silentGain.connect(ctx.destination);
+
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
     let silenceTimer = null;
 
-    function checkVolume() {
+    if (state.vadInterval) {
+      clearInterval(state.vadInterval);
+      state.vadInterval = null;
+    }
+
+    // Intervalo de 100ms: elimina sobrecarga da thread de áudio e impede rajadas de pacotes a 60 FPS
+    state.vadInterval = setInterval(() => {
       if (!state.inCall || state.isMuted) {
-        setLocalSpeaking(false);
-        requestAnimationFrame(checkVolume);
+        if (state.isSpeaking) {
+          setLocalSpeaking(false);
+        }
         return;
       }
 
@@ -1065,18 +1145,17 @@ function setupVoiceDetector(stream) {
           silenceTimer = null;
         }, 350);
       }
-
-      requestAnimationFrame(checkVolume);
-    }
-
-    checkVolume();
+    }, 100);
   } catch (err) {
     console.warn('Detector ignorado:', err);
   }
 }
 
 function setLocalSpeaking(speaking) {
+  // GUARDA CRÍTICA: Não envia nada se o estado não mudou! Evita flooding de pacotes contínuos
+  if (state.isSpeaking === speaking) return;
   state.isSpeaking = speaking;
+
   if (speaking) {
     elements.localTile.classList.add('speaking');
   } else {
@@ -1085,6 +1164,35 @@ function setLocalSpeaking(speaking) {
   if (state.sendSpeaking) {
     state.sendSpeaking({ isSpeaking: speaking });
   }
+}
+
+// --- Identificador Seguro de Transmissão de Tela ---
+function isScreenMedia(streamOrTrack, metadata) {
+  if (metadata && metadata.type === 'screen') return true;
+  if (!streamOrTrack) return false;
+
+  if (streamOrTrack instanceof MediaStream) {
+    const videoTrack = streamOrTrack.getVideoTracks()[0];
+    if (videoTrack) {
+      const settings = videoTrack.getSettings ? videoTrack.getSettings() : {};
+      if (settings.displaySurface) return true;
+      const label = (videoTrack.label || '').toLowerCase();
+      if (label.includes('screen') || label.includes('window') || label.includes('display') || label.includes('monitor') || label.includes('tab')) {
+        return true;
+      }
+    }
+  }
+
+  if (streamOrTrack instanceof MediaStreamTrack || (streamOrTrack.kind && streamOrTrack.getSettings)) {
+    const settings = streamOrTrack.getSettings ? streamOrTrack.getSettings() : {};
+    if (settings.displaySurface) return true;
+    const label = (streamOrTrack.label || '').toLowerCase();
+    if (label.includes('screen') || label.includes('window') || label.includes('display') || label.includes('monitor') || label.includes('tab')) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // --- Streams Remotos ---
@@ -1100,29 +1208,77 @@ function handleRemoteStream(stream, peerId, metadata) {
     };
   }
 
-  if (metadata && metadata.type === 'screen') {
+  const isScreen = isScreenMedia(stream, metadata) || (state.peers[peerId]?.isSharingScreen && state.peers[peerId]?.screenStreamId === stream.id);
+
+  if (isScreen) {
     elements.mainCinemaScreen.classList.add('live');
     elements.screenShareVideo.srcObject = stream;
-    elements.screenShareVideo.muted = false; // Ouvinte escuta o som do filme em alto e bom som
+    elements.screenShareVideo.muted = false; // Ouvinte escuta o áudio do filme transmitido
     elements.screenShareVideo.play().catch(e => console.warn(e));
     showToast('🍿 O filme começou na telona!');
     return;
   }
 
-  state.peers[peerId].stream = stream;
-  const hasVideo = stream.getVideoTracks().length > 0;
+  // Microfone e Câmera (isolados da transmissão de tela)
+  const audioTracks = stream.getAudioTracks();
+  if (audioTracks.length > 0 && elements.remoteAudio) {
+    elements.remoteAudio.srcObject = new MediaStream(audioTracks);
+    elements.remoteAudio.muted = state.isDeafened;
+    elements.remoteAudio.play().catch(e => console.warn(e));
+  }
 
-  // CRÍTICO: Sempre anexa o stream para que o áudio do microfone toque sem falhas!
-  elements.remoteVideo.srcObject = stream;
-  elements.remoteVideo.play().catch(e => console.warn(e));
-
-  if (hasVideo) {
+  const videoTracks = stream.getVideoTracks();
+  if (videoTracks.length > 0) {
+    elements.remoteVideo.srcObject = new MediaStream(videoTracks);
+    elements.remoteVideo.muted = true; // remoteAudio cuida da reprodução do som
+    elements.remoteVideo.play().catch(e => console.warn(e));
     elements.remoteAvatarPlaceholder.style.display = 'none';
   } else {
     elements.remoteAvatarPlaceholder.style.display = 'flex';
   }
 
   resolveUserRoles();
+}
+
+function handleRemoteTrack(track, stream, peerId, metadata) {
+  if (!state.peers[peerId]) {
+    state.peers[peerId] = {
+      name: state.assignedRole === 'Usuário 1' ? 'Usuário 2' : 'Usuário 1',
+      color: '#e11d48',
+      avatarUrl: '',
+      isMuted: false,
+      isCameraOn: false,
+      isSharingScreen: false
+    };
+  }
+
+  const isScreen = isScreenMedia(track, metadata) || (state.peers[peerId]?.isSharingScreen && state.peers[peerId]?.screenStreamId === stream?.id);
+
+  if (isScreen) {
+    elements.mainCinemaScreen.classList.add('live');
+    if (elements.screenShareVideo.srcObject !== stream) {
+      elements.screenShareVideo.srcObject = stream;
+      elements.screenShareVideo.muted = false;
+      elements.screenShareVideo.play().catch(e => console.warn(e));
+    }
+    return;
+  }
+
+  if (track.kind === 'audio' && elements.remoteAudio) {
+    elements.remoteAudio.srcObject = stream;
+    elements.remoteAudio.muted = state.isDeafened;
+    elements.remoteAudio.play().catch(e => console.warn(e));
+  } else if (track.kind === 'video') {
+    elements.remoteVideo.srcObject = new MediaStream([track]);
+    elements.remoteVideo.muted = true;
+    elements.remoteVideo.play().catch(e => console.warn(e));
+    elements.remoteAvatarPlaceholder.style.display = 'none';
+
+    track.onended = () => {
+      elements.remoteVideo.srcObject = null;
+      elements.remoteAvatarPlaceholder.style.display = 'flex';
+    };
+  }
 }
 
 // --- Controles de Mídia ---
@@ -1144,11 +1300,12 @@ function toggleMute() {
 function toggleDeafen() {
   state.isDeafened = !state.isDeafened;
 
-  document.querySelectorAll('video, audio').forEach(el => {
-    if (el !== elements.localVideo) {
-      el.muted = state.isDeafened;
-    }
-  });
+  if (elements.remoteAudio) {
+    elements.remoteAudio.muted = state.isDeafened;
+  }
+  if (elements.screenShareVideo && !state.isScreenSharing) {
+    elements.screenShareVideo.muted = state.isDeafened;
+  }
 
   playSfx(state.isDeafened ? 'deafen_on' : 'deafen_off');
   elements.toggleDeafenBtn.classList.toggle('muted', state.isDeafened);
@@ -1183,7 +1340,13 @@ async function toggleCamera() {
     state.isCameraOn = false;
   } else {
     try {
-      const camStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const camStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        }
+      });
       playSfx('camera_on');
       const videoTrack = camStream.getVideoTracks()[0];
       state.localStream.addTrack(videoTrack);
@@ -1218,14 +1381,16 @@ async function toggleScreenShare() {
     try {
       state.screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
-          cursor: 'always',
-          displaySurface: 'browser'
+          cursor: 'always'
         },
         audio: {
           echoCancellation: false,
           noiseSuppression: false,
           autoGainControl: false
-        }
+        },
+        selfBrowserSurface: 'exclude',
+        surfaceSwitching: 'include',
+        systemAudio: 'include'
       });
 
       playSfx('screen_on');
@@ -1235,10 +1400,13 @@ async function toggleScreenShare() {
       elements.mainCinemaScreen.classList.add('live');
       elements.screenShareVideo.srcObject = state.screenStream;
       elements.screenShareVideo.muted = true; // Transmissor NÃO deve ouvir o próprio áudio duplicado com eco!
+      elements.screenShareVideo.play().catch(e => console.warn(e));
 
       const hasAudio = state.screenStream.getAudioTracks().length > 0;
       if (!hasAudio) {
         showToast('💡 Dica: Para seu parceiro ouvir o som do filme, marque "Compartilhar áudio" na janela de seleção.');
+      } else {
+        showToast('🎬 Transmissão iniciada! Dica: Clique em "Ocultar" na barrinha flutuante do navegador para ela sumir da tela.');
       }
 
       if (state.room) {
@@ -1249,12 +1417,15 @@ async function toggleScreenShare() {
         }
       }
 
+      if (state.sendScreenSync) {
+        state.sendScreenSync({ active: true, streamId: state.screenStream.id });
+      }
+
       state.screenStream.getVideoTracks()[0].onended = () => {
         stopScreenShare();
       };
 
       broadcastPresence();
-      showToast('🎬 Filme projetado na telona! Aproveitem a sessão.');
     } catch (err) {
       console.warn('Transmissão cancelada:', err);
     }
@@ -1275,6 +1446,12 @@ function stopScreenShare() {
     state.screenStream = null;
   }
 
+  if (state.sendScreenSync) {
+    try {
+      state.sendScreenSync({ active: false });
+    } catch (e) {}
+  }
+
   state.isScreenSharing = false;
   elements.toggleScreenBtn.classList.remove('active');
   elements.mainCinemaScreen.classList.remove('live');
@@ -1291,14 +1468,14 @@ function togglePageFullscreen() {
   }
 }
 
-// --- Fullscreen (Transmissão de Cinema com todo o menu e câmeras acessíveis) ---
+// --- Fullscreen da Telona de Cinema (Imersão Absoluta de Ponta a Ponta) ---
 function enterMovieFullscreen() {
-  const target = elements.callGrid;
+  const target = elements.mainCinemaScreen || elements.callGrid;
   if (target && target.requestFullscreen) {
     target.requestFullscreen().catch(() => {
       // Fallback
-      if (elements.mainCinemaScreen && elements.mainCinemaScreen.requestFullscreen) {
-        elements.mainCinemaScreen.requestFullscreen().catch(() => {});
+      if (elements.callGrid && elements.callGrid.requestFullscreen) {
+        elements.callGrid.requestFullscreen().catch(() => {});
       }
     });
   }

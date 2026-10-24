@@ -1607,12 +1607,72 @@ body.movie-night-theme {
 
 #callGrid:fullscreen #screenFullscreenBtn,
 #callGrid:-webkit-full-screen #screenFullscreenBtn {
-  display: flex !important;
+  display: none !important;
 }
 
 #callGrid:fullscreen #screenExitFullscreenBtn,
 #callGrid:-webkit-full-screen #screenExitFullscreenBtn {
+  display: flex !important;
+}
+
+/* Telona de Cinema em Tela Cheia Nativa (Imersão Absoluta de Ponta a Ponta) */
+.giant-projection-screen:fullscreen,
+.giant-projection-screen:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  background: #000 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.giant-projection-screen:fullscreen video#screenShareVideo,
+.giant-projection-screen:-webkit-full-screen video#screenShareVideo {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  object-fit: contain !important;
+}
+
+.giant-projection-screen:fullscreen .screen-overlay-controls,
+.giant-projection-screen:-webkit-full-screen .screen-overlay-controls {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  top: auto !important;
+  z-index: 10001 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+.giant-projection-screen:fullscreen #screenFullscreenBtn,
+.giant-projection-screen:-webkit-full-screen #screenFullscreenBtn {
   display: none !important;
+}
+
+.giant-projection-screen:fullscreen #screenExitFullscreenBtn,
+.giant-projection-screen:-webkit-full-screen #screenExitFullscreenBtn {
+  display: flex !important;
+}
+
+.giant-projection-screen:fullscreen.fullscreen-idle,
+.giant-projection-screen:-webkit-full-screen.fullscreen-idle {
+  cursor: none !important;
+}
+
+.giant-projection-screen:fullscreen.fullscreen-idle .screen-overlay-controls,
+.giant-projection-screen:-webkit-full-screen.fullscreen-idle .screen-overlay-controls {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(16px) !important;
 }
 
 /* Auto-hide dos controles e cursor quando o mouse para em tela cheia */

@@ -321,7 +321,7 @@
             <div class="side-user-slot" id="remoteSlot">
               <div class="compact-camera-card" id="remoteCamSlot" title="Clique para alternar com a telona principal" style="display: none;">
                 <div class="cam-lens-wrap">
-                  <video id="remoteVideo" autoplay playsinline></video>
+                  <video id="remoteVideo" autoplay playsinline muted></video>
                   <div class="cam-avatar-bg" id="remoteAvatarPlaceholder">
                     <div class="compact-avatar partner" id="remoteBigAvatar">U2</div>
                   </div>
@@ -333,6 +333,9 @@
                 </div>
               </div>
             </div>
+
+            <!-- Áudio Remoto Dedicado (Microfone do Parceiro em Som Cristalino) -->
+            <audio id="remoteAudio" autoplay playsinline></audio>
 
             <!-- Timer de Sessão em baixo dos Usuários -->
             <div class="side-call-timer" id="callTimerBadge" style="display: none;">

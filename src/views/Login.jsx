@@ -1,18 +1,46 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  setPersistence, 
+  browserLocalPersistence 
+} from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { Lock, AlertCircle, Loader2 } from 'lucide-react';
 
 const ADMIN_EMAIL = 'admin@fudidoflix.app';
+
+export async function loginWithFirebase(password) {
+  if (!password || !password.trim()) {
+    throw new Error('Por favor, digite a senha de acesso.');
+  }
+
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    const userCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, password.trim());
+    return userCredential.user;
+  } catch (err) {
+    console.error('Erro na autenticação Firebase:', err);
+    if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      throw new Error('Senha incorreta! Verifique e tente novamente.');
+    } else if (err.code === 'auth/user-not-found') {
+      throw new Error(`Usuário não cadastrado no Firebase Console. Crie o e-mail ${ADMIN_EMAIL} no console!`);
+    } else if (err.code === 'auth/too-many-requests') {
+      throw new Error('Muitas tentativas sem sucesso. Aguarde um instante.');
+    } else if (err.code === 'auth/invalid-api-key' || err.code === 'auth/invalid-app-id') {
+      throw new Error('Chaves do Firebase não configuradas! Verifique o firebase.js.');
+    } else {
+      throw new Error(err.message || 'Falha ao autenticar no Firebase. Tente novamente.');
+    }
+  }
+}
 
 export default function Login({ onLoginSuccess }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const verifyLogin = async () => {
-    const cleanPass = (password || '').trim();
-    if (!cleanPass) {
+  const handleLogin = async () => {
+    if (!password || !password.trim()) {
       setErrorMsg('Por favor, digite a senha de acesso.');
       return;
     }
@@ -20,53 +48,27 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
     setErrorMsg('');
 
-    // 1. Tenta autenticar pelo Firebase Authentication oficial
     try {
-      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, cleanPass);
+      await loginWithFirebase(password);
       sessionStorage.setItem('fudidoFlixAccess', 'granted');
-      if (onLoginSuccess) onLoginSuccess();
-      return;
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
     } catch (err) {
-      console.warn('[Auth] Tentativa Firebase falhou:', err.code, err.message);
-
-      // 2. Fallback de compatibilidade (aceita "senha" ou "fudidoflix")
-      const salt = "fudidoflix2025";
-      const target = "c2VuaGFmdWRpZG9mbGl4MjAyNQ=="; // "senha"
-      let encodedInput = "";
-      try {
-        encodedInput = btoa(cleanPass + salt);
-      } catch (_) {}
-
-      if (encodedInput === target || cleanPass.toLowerCase() === 'senha' || cleanPass.toLowerCase() === 'fudidoflix') {
-        sessionStorage.setItem('fudidoFlixAccess', 'granted');
-        if (onLoginSuccess) onLoginSuccess();
-        return;
-      }
-
-      // Mensagem clara para o usuário
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setErrorMsg('Senha incorreta! Verifique sua senha e tente novamente.');
-      } else if (err.code === 'auth/user-not-found') {
-        setErrorMsg(`Usuário ${ADMIN_EMAIL} não encontrado no Firebase Console. Crie-o ou use a senha padrão.`);
-      } else if (err.code === 'auth/too-many-requests') {
-        setErrorMsg('Muitas tentativas com erro. Aguarde alguns instantes.');
-      } else {
-        setErrorMsg(err.message || 'Senha incorreta! Tente novamente.');
-      }
-
       setPassword('');
+      setErrorMsg(err.message || 'Senha incorreta! Tente novamente.');
       setLoading(false);
     }
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      verifyLogin();
+      handleLogin();
     }
   };
 
   return (
-    <div className="min-h-screen text-gray-100 relative select-none flex items-center justify-start pl-6 md:pl-20 lg:pl-28 overflow-hidden">
+    <div className="min-h-screen text-gray-100 relative select-none flex items-center justify-start pl-6 md:pl-20 lg:pl-28 overflow-hidden font-sans">
       {/* Background Video */}
       <video 
         autoPlay 
@@ -78,20 +80,20 @@ export default function Login({ onLoginSuccess }) {
         <source src="./videologin.mp4" type="video/mp4" />
       </video>
 
-      {/* Dark overlay */}
-      <div className="fixed inset-0 bg-gradient-to-r from-black/95 via-black/70 to-black/30 pointer-events-none z-10"></div>
+      {/* Dark gradient overlay */}
+      <div className="fixed inset-0 bg-gradient-to-r from-black/95 via-black/60 to-black/20 pointer-events-none z-10"></div>
 
-      {/* Login Card */}
-      <div className="relative z-20 w-full max-w-md p-8 sm:p-10 bg-black/80 border border-zinc-800/80 rounded-2xl shadow-2xl backdrop-blur-md">
+      {/* Login Box */}
+      <div className="relative z-20 w-full max-w-md p-8 sm:p-10 bg-black/75 rounded-2xl shadow-2xl backdrop-blur-md border border-zinc-800/80 animate-scale-up">
         <header className="mb-6">
-          <h1 className="text-4xl md:text-5xl font-black text-[#E50914] tracking-wider uppercase drop-shadow-[0_0_20px_rgba(229,9,20,0.5)]">
+          <h1 className="text-3xl md:text-4xl font-black text-[#E50914] tracking-wider uppercase mb-8 drop-shadow-[0_0_15px_rgba(229,9,20,0.5)]">
             FUDIDOFLIX
           </h1>
-          <h2 className="text-xl font-bold text-white mt-4 mb-1">
-            Entrar no Streaming
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Entrar
           </h2>
-          <p className="text-xs text-zinc-400">
-            Digite sua chave de acesso para liberar o catálogo completo.
+          <p className="text-sm text-zinc-400 font-medium">
+            Informe sua senha para liberar o catálogo.
           </p>
         </header>
 
@@ -102,33 +104,33 @@ export default function Login({ onLoginSuccess }) {
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="relative">
             <Lock className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
             <input 
               type="password" 
-              placeholder="Senha de Acesso" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={handleKeyDown}
+              placeholder="Senha de Acesso"
               disabled={loading}
               autoFocus
-              className="w-full bg-zinc-900/90 border border-zinc-800 focus:border-[#E50914] focus:ring-1 focus:ring-[#E50914] rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-zinc-500 focus:outline-none transition-all font-mono tracking-wider"
+              className="w-full bg-zinc-900/90 border border-zinc-800 focus:border-[#E50914] focus:ring-1 focus:ring-[#E50914] rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-zinc-500 focus:outline-none transition-all font-mono tracking-widest"
             />
           </div>
 
           <button 
-            onClick={verifyLogin}
+            onClick={handleLogin}
             disabled={loading || !password}
-            className="w-full bg-[#E50914] hover:bg-red-700 hover:shadow-[0_0_20px_rgba(229,9,20,0.4)] active:scale-98 text-white font-black py-3.5 rounded-xl transition-all cursor-pointer disabled:bg-zinc-900 disabled:text-zinc-600 disabled:cursor-not-allowed text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-[#E50914] hover:bg-red-700 text-white font-bold text-sm rounded-xl shadow-[0_0_20px_rgba(229,9,20,0.4)] hover:shadow-[0_0_30px_#E50914] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed uppercase tracking-wider"
           >
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Verificando...</span>
+                <span>Autenticando...</span>
               </>
             ) : (
-              <span>Entrar no FudidoFlix</span>
+              <span>Entrar</span>
             )}
           </button>
         </div>

@@ -238,6 +238,25 @@
             <div class="giant-projection-screen" id="mainCinemaScreen">
               <video id="screenShareVideo" autoplay playsinline></video>
 
+              <!-- Navegador Virtual Compartilhado (Hyperbeam Cloud Chromium) -->
+              <div class="virtual-browser-wrapper" id="virtualBrowserWrapper" style="display: none;">
+                <div class="virtual-browser-header">
+                  <div class="browser-header-left">
+                    <span class="browser-status-pulse"></span>
+                    <span class="browser-header-title">🌐 Navegador Virtual Compartilhado • Ambos têm controle</span>
+                  </div>
+                  <div class="browser-header-right">
+                    <button class="browser-header-action" id="closeVirtualBrowserBtn" title="Fechar Navegador e voltar ao Standby">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      <span>Fechar Navegador</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="virtual-browser-viewport" id="virtualBrowserViewport">
+                  <iframe id="virtualBrowserIframe" allow="clipboard-read; clipboard-write; microphone; camera; autoplay; fullscreen" allowfullscreen></iframe>
+                </div>
+              </div>
+
               <!-- Standby do Projetor -->
               <div class="retro-standby" id="projectorStandby">
                 <div class="spinning-film-reel">
@@ -460,6 +479,94 @@
       <div class="ticket-modal-footer">
         <button class="modal-cancel-btn" id="cancelProfileBtn">Cancelar</button>
         <button class="modal-confirm-btn" id="saveProfileBtn">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Opções de Projeção (Compartilhar Tela OU Navegador Virtual) -->
+  <div class="cinema-modal-backdrop" id="projectionChoiceModal" style="display: none;">
+    <div class="ticket-modal-card projection-modal-card">
+      <div class="ticket-modal-header">
+        <h3>🎬 Iniciar Projeção na Telona</h3>
+        <button class="modal-close-cross" id="closeProjectionChoiceModal">&times;</button>
+      </div>
+      <div class="ticket-modal-body">
+        <p class="projection-modal-intro">Escolha como o casal vai curtir a sessão hoje:</p>
+        
+        <div class="projection-options-grid">
+          <!-- Opção 1: Compartilhar Tela Local -->
+          <div class="projection-option-card" id="chooseScreenShareCard">
+            <div class="option-icon-box gold">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <div class="option-content">
+              <h4>🖥️ Compartilhar Tela / Janela</h4>
+              <p>Transmita uma janela, aba ou a tela do seu PC com áudio direto de cinema.</p>
+              <span class="option-badge">Ideal para Netflix / Vídeos Locais</span>
+            </div>
+          </div>
+
+          <!-- Opção 2: Navegador Virtual Compartilhado (Hyperbeam) -->
+          <div class="projection-option-card" id="chooseVirtualBrowserCard">
+            <div class="option-icon-box cyan">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </div>
+            <div class="option-content">
+              <h4>🌐 Navegador Virtual (Hyperbeam)</h4>
+              <p>Um Chrome na nuvem em tempo real! Os dois controlam juntos pelo mouse/teclado, sem barras na tela.</p>
+              <span class="option-badge highlight">Controle Compartilhado a Dois</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ticket-modal-footer">
+        <button class="modal-cancel-btn" id="cancelProjectionChoiceBtn">Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Configuração do Navegador Virtual (Hyperbeam) -->
+  <div class="cinema-modal-backdrop" id="hyperbeamConfigModal" style="display: none;">
+    <div class="ticket-modal-card">
+      <div class="ticket-modal-header">
+        <h3>🌐 Conectar Navegador Virtual (Hyperbeam)</h3>
+        <button class="modal-close-cross" id="closeHyperbeamModal">&times;</button>
+      </div>
+      <div class="ticket-modal-body">
+        <p style="font-size: 13px; color: #a1a1aa; margin-bottom: 14px; line-height: 1.5;">
+          O Hyperbeam abre um navegador na nuvem onde ambos podem digitar, navegar e assistir com som estéreo.
+        </p>
+        
+        <div class="modal-input-group">
+          <label for="hbApiKeyInput">🔑 Chave de API do Hyperbeam (Recomendado)</label>
+          <input type="password" id="hbApiKeyInput" placeholder="Ex: sk_live_... ou cole sua chave">
+          <span style="font-size: 11px; color: #71717a; margin-top: 4px; display: block;">
+            Ganha 10.000 min/mês grátis sem cartão em <a href="https://hyperbeam.com" target="_blank" style="color: #f59e0b; text-decoration: underline;">hyperbeam.com</a>
+          </span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; margin: 14px 0;">
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+          <span style="font-size: 11px; color: #71717a; text-transform: uppercase;">ou cole link de sessão</span>
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+        </div>
+
+        <div class="modal-input-group">
+          <label for="hbEmbedUrlInput">🔗 Link de Sessão Direto (Embed URL)</label>
+          <input type="url" id="hbEmbedUrlInput" placeholder="https://...hyperbeam.com/...?token=...">
+        </div>
+      </div>
+      <div class="ticket-modal-footer">
+        <button class="modal-cancel-btn" id="cancelHyperbeamBtn">Cancelar</button>
+        <button class="modal-confirm-btn" id="startHyperbeamBtn">🚀 Iniciar Navegador</button>
       </div>
     </div>
   </div>

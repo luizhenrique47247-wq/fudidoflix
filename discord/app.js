@@ -12,6 +12,8 @@ const state = {
   isDeafened: false,
   isCameraOn: false,
   isScreenSharing: false,
+  isVirtualBrowserActive: false,
+  virtualBrowserEmbedUrl: null,
   isSpeaking: false,
   isAlarmPlaying: false,
 
@@ -393,6 +395,25 @@ const elements = {
   roomNameInput: document.getElementById('roomNameInput'),
   colorPickerGrid: document.getElementById('colorPickerGrid'),
 
+  // Navegador Virtual na Telona
+  virtualBrowserWrapper: document.getElementById('virtualBrowserWrapper'),
+  virtualBrowserIframe: document.getElementById('virtualBrowserIframe'),
+  closeVirtualBrowserBtn: document.getElementById('closeVirtualBrowserBtn'),
+
+  // Modais de Escolha de Projeção & Hyperbeam
+  projectionChoiceModal: document.getElementById('projectionChoiceModal'),
+  closeProjectionChoiceModal: document.getElementById('closeProjectionChoiceModal'),
+  cancelProjectionChoiceBtn: document.getElementById('cancelProjectionChoiceBtn'),
+  chooseScreenShareCard: document.getElementById('chooseScreenShareCard'),
+  chooseVirtualBrowserCard: document.getElementById('chooseVirtualBrowserCard'),
+
+  hyperbeamConfigModal: document.getElementById('hyperbeamConfigModal'),
+  closeHyperbeamModal: document.getElementById('closeHyperbeamModal'),
+  cancelHyperbeamBtn: document.getElementById('cancelHyperbeamBtn'),
+  startHyperbeamBtn: document.getElementById('startHyperbeamBtn'),
+  hbApiKeyInput: document.getElementById('hbApiKeyInput'),
+  hbEmbedUrlInput: document.getElementById('hbEmbedUrlInput'),
+
   toast: document.getElementById('toast')
 };
 
@@ -431,8 +452,48 @@ function init() {
   elements.toggleMicBtn.addEventListener('click', toggleMute);
   elements.toggleDeafenBtn.addEventListener('click', toggleDeafen);
   elements.toggleCameraBtn.addEventListener('click', toggleCamera);
-  elements.toggleScreenBtn.addEventListener('click', toggleScreenShare);
-  elements.standbyScreenShareBtn.addEventListener('click', toggleScreenShare);
+  elements.toggleScreenBtn.addEventListener('click', handleProjectionBtnClick);
+  elements.standbyScreenShareBtn.addEventListener('click', handleProjectionBtnClick);
+
+  // Modais de Escolha da Projeção & Hyperbeam
+  if (elements.closeProjectionChoiceModal) {
+    elements.closeProjectionChoiceModal.addEventListener('click', () => { playSfx('click'); closeProjectionChoiceModal(); });
+  }
+  if (elements.cancelProjectionChoiceBtn) {
+    elements.cancelProjectionChoiceBtn.addEventListener('click', () => { playSfx('click'); closeProjectionChoiceModal(); });
+  }
+  if (elements.chooseScreenShareCard) {
+    elements.chooseScreenShareCard.addEventListener('click', () => {
+      playSfx('click');
+      closeProjectionChoiceModal();
+      toggleScreenShare();
+    });
+  }
+  if (elements.chooseVirtualBrowserCard) {
+    elements.chooseVirtualBrowserCard.addEventListener('click', () => {
+      playSfx('click');
+      closeProjectionChoiceModal();
+      openVirtualBrowserFlow();
+    });
+  }
+
+  if (elements.closeHyperbeamModal) {
+    elements.closeHyperbeamModal.addEventListener('click', () => { playSfx('click'); closeHyperbeamConfigModal(); });
+  }
+  if (elements.cancelHyperbeamBtn) {
+    elements.cancelHyperbeamBtn.addEventListener('click', () => { playSfx('click'); closeHyperbeamConfigModal(); });
+  }
+  if (elements.startHyperbeamBtn) {
+    elements.startHyperbeamBtn.addEventListener('click', handleStartHyperbeamSubmit);
+  }
+
+  // Fechar Navegador Virtual na Telona
+  if (elements.closeVirtualBrowserBtn) {
+    elements.closeVirtualBrowserBtn.addEventListener('click', () => {
+      playSfx('click');
+      unmountVirtualBrowser(true);
+    });
+  }
 
   const movieVolumeSlider = document.getElementById('movieVolumeSlider');
   if (movieVolumeSlider) {
@@ -816,12 +877,24 @@ async function joinCall() {
     const [sendAlarm, onAlarm] = state.room.makeAction('alarm');
     const [sendRoomFull, onRoomFull] = state.room.makeAction('room_full');
     const [sendScreenSync, onScreenSync] = state.room.makeAction('screensync');
+    const [sendVirtualBrowserSync, onVirtualBrowserSync] = state.room.makeAction('vbrowser_sync');
 
     state.sendPresence = sendPresence;
     state.sendSpeaking = sendSpeaking;
     state.sendAlarm = sendAlarm;
     state.sendRoomFull = sendRoomFull;
     state.sendScreenSync = sendScreenSync;
+    state.sendVirtualBrowserSync = sendVirtualBrowserSync;
+
+    // Sincronização do Navegador Virtual entre o casal
+    onVirtualBrowserSync((data, peerId) => {
+      if (data.active && data.embedUrl) {
+        mountVirtualBrowser(data.embedUrl, false);
+        showToast('🌐 O parceiro abriu o Navegador Virtual na telona!');
+      } else {
+        unmountVirtualBrowser(false);
+      }
+    });
 
     // Se este usuário for o 3º tentando entrar em uma sala já com 2 pessoas
     onRoomFull((data, peerId) => {
@@ -907,6 +980,10 @@ async function joinCall() {
         } catch (err) {
           console.warn('Aviso ao sincronizar transmissão de tela:', err?.message || err);
         }
+      }
+
+      if (state.isVirtualBrowserActive && state.virtualBrowserEmbedUrl && state.sendVirtualBrowserSync) {
+        state.sendVirtualBrowserSync({ active: true, embedUrl: state.virtualBrowserEmbedUrl }, peerId);
       }
 
       broadcastPresence();
@@ -1025,6 +1102,16 @@ function leaveCall() {
     try {
       state.sendScreenSync({ active: false });
     } catch (e) {}
+  }
+
+  if (state.sendVirtualBrowserSync) {
+    try {
+      state.sendVirtualBrowserSync({ active: false });
+    } catch (e) {}
+  }
+
+  if (state.isVirtualBrowserActive) {
+    unmountVirtualBrowser(false);
   }
 
   if (state.sendPresence) {
@@ -1430,6 +1517,214 @@ async function toggleCamera() {
     } catch (err) {
       alert('Não foi possível acessar a câmera.');
     }
+  }
+
+  broadcastPresence();
+}
+
+// --- Fluxo de Seleção de Projeção (Compartilhar Tela vs Navegador Virtual) ---
+function handleProjectionBtnClick() {
+  playSfx('click');
+  if (state.isScreenSharing) {
+    stopScreenShare();
+    return;
+  }
+  if (state.isVirtualBrowserActive) {
+    unmountVirtualBrowser(true);
+    return;
+  }
+  openProjectionChoiceModal();
+}
+
+function openProjectionChoiceModal() {
+  if (elements.projectionChoiceModal) {
+    elements.projectionChoiceModal.style.display = 'flex';
+  }
+}
+
+function closeProjectionChoiceModal() {
+  if (elements.projectionChoiceModal) {
+    elements.projectionChoiceModal.style.display = 'none';
+  }
+}
+
+function openHyperbeamConfigModal() {
+  if (elements.hyperbeamConfigModal) {
+    if (elements.hbApiKeyInput) {
+      elements.hbApiKeyInput.value = localStorage.getItem('hyperbeam_api_key') || '';
+    }
+    if (elements.hbEmbedUrlInput) {
+      elements.hbEmbedUrlInput.value = localStorage.getItem('hyperbeam_embed_url') || '';
+    }
+    elements.hyperbeamConfigModal.style.display = 'flex';
+  }
+}
+
+function closeHyperbeamConfigModal() {
+  if (elements.hyperbeamConfigModal) {
+    elements.hyperbeamConfigModal.style.display = 'none';
+  }
+}
+
+function openVirtualBrowserFlow() {
+  const savedEmbedUrl = localStorage.getItem('hyperbeam_embed_url') || '';
+  const savedApiKey = localStorage.getItem('hyperbeam_api_key') || '';
+
+  if (savedEmbedUrl) {
+    mountVirtualBrowser(savedEmbedUrl, true);
+    return;
+  }
+
+  if (savedApiKey) {
+    showToast('⏳ Conectando ao Navegador Virtual...');
+    createHyperbeamSession(savedApiKey).then(url => {
+      mountVirtualBrowser(url, true);
+    }).catch(err => {
+      console.warn(err);
+      openHyperbeamConfigModal();
+    });
+    return;
+  }
+
+  openHyperbeamConfigModal();
+}
+
+async function handleStartHyperbeamSubmit() {
+  const apiKey = elements.hbApiKeyInput ? elements.hbApiKeyInput.value.trim() : '';
+  const embedUrl = elements.hbEmbedUrlInput ? elements.hbEmbedUrlInput.value.trim() : '';
+
+  if (!apiKey && !embedUrl) {
+    alert('Por favor, informe a Chave de API do Hyperbeam ou cole um Link de Sessão direto.');
+    return;
+  }
+
+  playSfx('click');
+  closeHyperbeamConfigModal();
+
+  if (embedUrl) {
+    localStorage.setItem('hyperbeam_embed_url', embedUrl);
+    mountVirtualBrowser(embedUrl, true);
+    return;
+  }
+
+  if (apiKey) {
+    localStorage.setItem('hyperbeam_api_key', apiKey);
+    showToast('⏳ Conectando ao Chrome Virtual na nuvem...');
+    try {
+      const generatedUrl = await createHyperbeamSession(apiKey);
+      mountVirtualBrowser(generatedUrl, true);
+    } catch (err) {
+      alert(err.message || 'Erro ao conectar à API do Hyperbeam.');
+      openHyperbeamConfigModal();
+    }
+  }
+}
+
+async function createHyperbeamSession(apiKey) {
+  const cleanKey = apiKey.trim();
+  const payload = {
+    start_url: 'https://www.google.com',
+    offline_timeout: 300
+  };
+
+  // 1. Tentativa Direta
+  try {
+    const res = await fetch('https://engine.hyperbeam.com/v0/vm', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${cleanKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.embed_url) return data.embed_url;
+    }
+  } catch (e) {
+    console.warn('Tentativa direta ao Hyperbeam bloqueada por CORS, usando proxy...');
+  }
+
+  // 2. Proxies com suporte a Authorization
+  const proxies = [
+    `https://corsproxy.io/?url=${encodeURIComponent('https://engine.hyperbeam.com/v0/vm')}`
+  ];
+
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${cleanKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.embed_url) return data.embed_url;
+      }
+    } catch (err) {
+      console.warn('Proxy falhou:', err);
+    }
+  }
+
+  throw new Error('Não foi possível conectar à API do Hyperbeam automaticamente por restrição de CORS. Cole diretamente o Link de Sessão (Embed URL)!');
+}
+
+function mountVirtualBrowser(embedUrl, isCreator) {
+  state.isVirtualBrowserActive = true;
+  state.virtualBrowserEmbedUrl = embedUrl;
+
+  if (state.isScreenSharing) {
+    stopScreenShare();
+  }
+
+  elements.mainCinemaScreen.classList.add('live', 'virtual-browser-active');
+  if (elements.virtualBrowserIframe) {
+    elements.virtualBrowserIframe.src = embedUrl;
+  }
+  if (elements.virtualBrowserWrapper) {
+    elements.virtualBrowserWrapper.style.display = 'flex';
+  }
+  if (elements.screenShareVideo) {
+    elements.screenShareVideo.style.display = 'none';
+  }
+  if (elements.projectorStandby) {
+    elements.projectorStandby.style.display = 'none';
+  }
+  elements.toggleScreenBtn.classList.add('active');
+
+  if (isCreator && state.sendVirtualBrowserSync) {
+    state.sendVirtualBrowserSync({ active: true, embedUrl });
+    showToast('🌐 Navegador Virtual iniciado! Ambos têm controle conjunto.');
+  }
+
+  broadcastPresence();
+}
+
+function unmountVirtualBrowser(isInitiator) {
+  state.isVirtualBrowserActive = false;
+  state.virtualBrowserEmbedUrl = null;
+
+  if (elements.virtualBrowserIframe) {
+    elements.virtualBrowserIframe.src = 'about:blank';
+  }
+  if (elements.virtualBrowserWrapper) {
+    elements.virtualBrowserWrapper.style.display = 'none';
+  }
+  elements.mainCinemaScreen.classList.remove('live', 'virtual-browser-active');
+  if (elements.screenShareVideo) {
+    elements.screenShareVideo.style.display = 'block';
+  }
+  if (elements.projectorStandby) {
+    elements.projectorStandby.style.display = 'flex';
+  }
+  elements.toggleScreenBtn.classList.remove('active');
+
+  if (isInitiator && state.sendVirtualBrowserSync) {
+    state.sendVirtualBrowserSync({ active: false });
+    showToast('🌐 Navegador Virtual encerrado.');
   }
 
   broadcastPresence();

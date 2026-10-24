@@ -1693,6 +1693,205 @@ body.movie-night-theme {
 }
 
 /* ==========================================================================
+   NAVEGADOR VIRTUAL COMPARTILHADO (HYPERBEAM) & MODAL DE ESCOLHA
+   ========================================================================== */
+
+/* Container do Navegador Virtual na Telona */
+.virtual-browser-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #09090b;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 20;
+}
+
+.virtual-browser-header {
+  height: 38px;
+  background: rgba(18, 18, 22, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  backdrop-filter: blur(10px);
+  user-select: none;
+}
+
+.browser-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.browser-status-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #06b6d4;
+  box-shadow: 0 0 10px #06b6d4;
+  animation: pulseNeon 2s infinite;
+}
+
+.browser-header-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e4e4e7;
+  letter-spacing: 0.3px;
+}
+
+.browser-header-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.browser-header-action:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.virtual-browser-viewport {
+  flex: 1;
+  width: 100%;
+  height: calc(100% - 38px);
+  position: relative;
+  background: #000;
+}
+
+.virtual-browser-viewport iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}
+
+/* Telona em tela cheia com Navegador Virtual */
+.giant-projection-screen:fullscreen .virtual-browser-wrapper,
+.giant-projection-screen:-webkit-full-screen .virtual-browser-wrapper {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+}
+
+.giant-projection-screen:fullscreen .virtual-browser-viewport,
+.giant-projection-screen:-webkit-full-screen .virtual-browser-viewport {
+  height: calc(100vh - 38px) !important;
+}
+
+/* Modal de Escolha da Projeção */
+.projection-modal-card {
+  max-width: 520px !important;
+}
+
+.projection-modal-intro {
+  font-size: 14px;
+  color: #d4d4d8;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.projection-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.projection-option-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.projection-option-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--cinema-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.option-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.option-icon-box.gold {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.option-icon-box.cyan {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(14, 165, 233, 0.2));
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-content h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.option-content p {
+  font-size: 12px;
+  color: #a1a1aa;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.option-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+}
+
+.option-badge.highlight {
+  background: rgba(6, 182, 212, 0.2);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+/* ==========================================================================
    RESPONSIVO
    ========================================================================== */
 @media (max-width: 768px) {

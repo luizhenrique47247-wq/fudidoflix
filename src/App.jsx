@@ -527,7 +527,6 @@ export default function App() {
           isTrailer={playerMedia.isTrailer}
           trailerKey={playerMedia.trailerKey}
           onClose={() => setPlayerMedia(null)}
-          onOpenCineAmor={() => { setPlayerMedia(null); window.location.href = './discord/'; }}
           onPlayerClose={() => {
             // Trigger refresh logic on closing player
             if (activeTab === 'inicio') {

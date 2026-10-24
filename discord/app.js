@@ -897,7 +897,7 @@ async function joinCall() {
     const [sendAlarm, onAlarm] = state.room.makeAction('alarm');
     const [sendRoomFull, onRoomFull] = state.room.makeAction('room_full');
     const [sendScreenSync, onScreenSync] = state.room.makeAction('screensync');
-    const [sendVirtualBrowserSync, onVirtualBrowserSync] = state.room.makeAction('vbrowser_sync');
+    const [sendVirtualBrowserSync, onVirtualBrowserSync] = state.room.makeAction('vb_sync');
 
     state.sendPresence = sendPresence;
     state.sendSpeaking = sendSpeaking;

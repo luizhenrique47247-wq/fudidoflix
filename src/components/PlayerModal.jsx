@@ -249,7 +249,7 @@ export default function PlayerModal({ id, type: rawType, initialSeason, initialE
           <X className="w-6 h-6" />
         </button>
 
-        {/* Botão Assistir a Dois (Cine Amor) */}
+        {/* Botï¿½o Assistir a Dois (Cine Amor) */}
         {onOpenCineAmor && (!isTrailer && type !== 'channel') && (
           <button
             onClick={() => onOpenCineAmor(itemData || { id, title: 'Filme' })}
